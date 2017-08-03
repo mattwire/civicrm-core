@@ -18,10 +18,14 @@
         {/foreach}
     <tr>
         <td class="label">{ts}Author{/ts}</td><td>{$extension.maintainer.author} (<a href="mailto:{$extension.maintainer.email}">{$extension.maintainer.email}</a>)
+        {if $extension.maintainer.authors|is_array}
         {counter start=0 skip=1 assign="authorId"}
         {foreach from=$extension.maintainer.authors item=author}
           , {$author} (<a href="mailto:{$extension.maintainer.emails[$authorId]}">{$extension.maintainer.emails[$authorId]}</a>){counter}
         {/foreach}
+        {elseif $extension.maintainer.authors}
+        , {$extension.maintainer.authors} (<a href="mailto:{$extension.maintainer.emails}">{$extension.maintainer.emails}</a>)
+        {/if}
         </td>
     </tr>
     <tr>
