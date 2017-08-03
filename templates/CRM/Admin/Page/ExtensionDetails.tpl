@@ -17,7 +17,12 @@
             <tr><td class="label">{$label}</td><td><a href="{$url}">{$url}</a></td></tr>
         {/foreach}
     <tr>
-        <td class="label">{ts}Author{/ts}</td><td>{$extension.maintainer.author} (<a href="mailto:{$extension.maintainer.email}">{$extension.maintainer.email}</a>)</td>
+        <td class="label">{ts}Author{/ts}</td><td>{$extension.maintainer.author} (<a href="mailto:{$extension.maintainer.email}">{$extension.maintainer.email}</a>)
+        {counter start=0 skip=1 assign="authorId"}
+        {foreach from=$extension.maintainer.authors item=author}
+          , {$author} (<a href="mailto:{$extension.maintainer.emails[$authorId]}">{$extension.maintainer.emails[$authorId]}</a>){counter}
+        {/foreach}
+        </td>
     </tr>
     <tr>
         <td class="label">{ts}Version{/ts}</td><td>{$extension.version}</td>
