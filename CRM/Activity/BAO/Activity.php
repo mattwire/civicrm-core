@@ -2053,7 +2053,7 @@ WHERE      activity.id IN ($activityIds)";
   }
 
   /**
-   * Add activity for Membership/Event/Contribution.
+   * Add activity for Membership/Contribution.
    *
    * @param object $activity
    *   (reference) particular component object.
@@ -2071,15 +2071,9 @@ WHERE      activity.id IN ($activityIds)";
     $targetContactID = NULL,
     $params = array()
   ) {
-    $date = date('YmdHis');
+    $date = CRM_Utils_Date::currentDBDate();
     if ($activity->__table == 'civicrm_membership') {
       $component = 'Membership';
-    }
-    elseif ($activity->__table == 'civicrm_participant') {
-      if ($activityType != 'Email') {
-        $activityType = 'Event Registration';
-      }
-      $component = 'Event';
     }
     elseif ($activity->__table == 'civicrm_contribution') {
       // create activity record only for Completed Contributions
@@ -2173,21 +2167,6 @@ WHERE      activity.id IN ($activityIds)";
         }
 
         $subject .= " - Status: " . CRM_Core_DAO::getFieldValue('CRM_Member_DAO_MembershipStatus', $entityObj->status_id, 'label');
-        return $subject;
-
-      case 'civicrm_participant':
-        $event = CRM_Event_BAO_Event::getEvents(1, $entityObj->event_id, TRUE, FALSE);
-        $roles = CRM_Event_PseudoConstant::participantRole();
-        $status = CRM_Event_PseudoConstant::participantStatus();
-        $subject = $event[$entityObj->event_id];
-
-        if (!empty($roles[$entityObj->role_id])) {
-          $subject .= ' - ' . $roles[$entityObj->role_id];
-        }
-        if (!empty($status[$entityObj->status_id])) {
-          $subject .= ' - ' . $status[$entityObj->status_id];
-        }
-
         return $subject;
 
       case 'civicrm_contribution':
