@@ -1739,7 +1739,7 @@ class CRM_Event_Form_Participant extends CRM_Contribute_Form_AbstractEditPayment
               $activityParams = array(
                 'source_contact_id' => $values->contact_id,
                 'source_record_id' => $values->id,
-                'activity_type_id' => CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_type_id', $activityType),
+                'activity_type_id' => CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_type_id', 'Email'),
                 'is_test' => $values->is_test,
                 'skipRecentView' => TRUE,
                 'campaign_id' => $values->campaign_id,
