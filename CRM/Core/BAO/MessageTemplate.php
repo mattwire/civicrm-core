@@ -327,7 +327,7 @@ class CRM_Core_BAO_MessageTemplate extends CRM_Core_DAO_MessageTemplate {
    * @return array
    *   Array of four parameters: a boolean whether the email was sent, and the subject, text and HTML templates
    */
-  public static function sendTemplate($params) {
+  public static function sendTemplate($params, $send=TRUE) {
     $defaults = array(
       // option group name of the template
       'groupName' => NULL,
@@ -362,52 +362,7 @@ class CRM_Core_BAO_MessageTemplate extends CRM_Core_DAO_MessageTemplate {
 
     CRM_Utils_Hook::alterMailParams($params, 'messageTemplate');
 
-    if ((!$params['groupName'] ||
-        !$params['valueName']
-      ) &&
-      !$params['messageTemplateID']
-    ) {
-      CRM_Core_Error::fatal(ts("Message template's option group and/or option value or ID missing."));
-    }
-
-    if ($params['messageTemplateID']) {
-      // fetch the three elements from the db based on id
-      $query = 'SELECT msg_subject subject, msg_text text, msg_html html, pdf_format_id format
-                      FROM civicrm_msg_template mt
-                      WHERE mt.id = %1 AND mt.is_default = 1';
-      $sqlParams = array(1 => array($params['messageTemplateID'], 'String'));
-    }
-    else {
-      // fetch the three elements from the db based on option_group and option_value names
-      $query = 'SELECT msg_subject subject, msg_text text, msg_html html, pdf_format_id format
-                      FROM civicrm_msg_template mt
-                      JOIN civicrm_option_value ov ON workflow_id = ov.id
-                      JOIN civicrm_option_group og ON ov.option_group_id = og.id
-                      WHERE og.name = %1 AND ov.name = %2 AND mt.is_default = 1';
-      $sqlParams = array(1 => array($params['groupName'], 'String'), 2 => array($params['valueName'], 'String'));
-    }
-    $dao = CRM_Core_DAO::executeQuery($query, $sqlParams);
-    $dao->fetch();
-
-    if (!$dao->N) {
-      if ($params['messageTemplateID']) {
-        CRM_Core_Error::fatal(ts('No such message template: id=%1.', array(1 => $params['messageTemplateID'])));
-      }
-      else {
-        CRM_Core_Error::fatal(ts('No such message template: option group %1, option value %2.', array(
-              1 => $params['groupName'],
-              2 => $params['valueName'],
-            )));
-      }
-    }
-
-    $mailContent = array(
-      'subject' => $dao->subject,
-      'text' => $dao->text,
-      'html' => $dao->html,
-      'format' => $dao->format,
-    );
-    $dao->free();
+    $mailContent = self::getMessageTemplate($params);
 
     CRM_Utils_Hook::alterMailContent($mailContent);
 
@@ -500,6 +455,11 @@ class CRM_Core_BAO_MessageTemplate extends CRM_Core_DAO_MessageTemplate {
       $mailContent['html'] = CRM_Utils_Token::replaceHookTokens($mailContent['html'], $contact, $categories, TRUE);
     }
 
+    // Strip remaining tokens before parsing through smarty to avoid smarty errors
+    foreach (array('subject', 'text', 'html') as $elem) {
+      $mailContent[$elem] = CRM_Utils_Token::stripTokens($mailContent[$elem]);
+    }
+
     // strip whitespace from ends and turn into a single line
     $mailContent['subject'] = "{strip}{$mailContent['subject']}{/strip}";
 
@@ -561,7 +521,9 @@ class CRM_Core_BAO_MessageTemplate extends CRM_Core_DAO_MessageTemplate {
         }
       }
 
-      $sent = CRM_Utils_Mail::send($params);
+      if ($send) {
+        $sent = CRM_Utils_Mail::send($params);
+      }
 
       if ($pdf_filename) {
         unlink($pdf_filename);
@@ -569,6 +531,65 @@ class CRM_Core_BAO_MessageTemplate extends CRM_Core_DAO_MessageTemplate {
     }
 
     return array($sent, $mailContent['subject'], $mailContent['text'], $mailContent['html']);
+  }
+
+  /**
+   * Retrieve the actual message template
+   * @param $params
+   *
+   * @return array
+   */
+  public static function getMessageTemplate($params) {
+    if ((!$params['groupName'] ||
+        !$params['valueName']
+      ) &&
+      !$params['messageTemplateID']
+    ) {
+      CRM_Core_Error::fatal(ts("Message template's option group and/or option value or ID missing."));
+    }
+
+    if ($params['messageTemplateID']) {
+      try {
+        $content = civicrm_api3('MessageTemplate', 'getsingle', array('id' => $params['messageTemplateID']));
+      }
+      catch (Exception $e) {
+        CRM_Core_Error::fatal(ts('No such message template: id=%1.', array(1 => $params['messageTemplateID'])));
+      }
+      return array(
+        'subject' => CRM_Utils_Array::value('msg_subject', $content),
+        'text' => CRM_Utils_Array::value('msg_text', $content),
+        'html' => CRM_Utils_Array::value('msg_html', $content),
+        'format' => isset($content['pdf_format_id']) ? $content['pdf_format_id'] : NULL,
+      );
+    }
+    else {
+      // FIXME: Use API here... but API doesn't seem to work for groupName,valueName parameters
+      // fetch the three elements from the db based on option_group and option_value names
+      $query = 'SELECT msg_subject subject, msg_text text, msg_html html, pdf_format_id format
+                      FROM civicrm_msg_template mt
+                      JOIN civicrm_option_value ov ON workflow_id = ov.id
+                      JOIN civicrm_option_group og ON ov.option_group_id = og.id
+                      WHERE og.name = %1 AND ov.name = %2 AND mt.is_default = 1';
+      $sqlParams = array(1 => array($params['groupName'], 'String'), 2 => array($params['valueName'], 'String'));
+    }
+    $dao = CRM_Core_DAO::executeQuery($query, $sqlParams);
+    $dao->fetch();
+
+    if (!$dao->N) {
+      CRM_Core_Error::fatal(ts('No such message template: option group %1, option value %2.', array(
+        1 => $params['groupName'],
+        2 => $params['valueName'],
+      )));
+    }
+
+    $mailContent = array(
+      'subject' => $dao->subject,
+      'text' => $dao->text,
+      'html' => $dao->html,
+      'format' => $dao->format,
+    );
+    $dao->free();
+    return $mailContent;
   }
 
 }

@@ -80,6 +80,17 @@ function civicrm_api3_message_template_delete($params) {
 function _civicrm_api3_message_template_get_spec(&$params) {
   // fetch active records by default
   $params['is_active']['api.default'] = 1;
+  $params['is_reserved']['api.default'] = 0;
+
+  $params['option_group_name']['description'] = 'option group name of the template (required if no id supplied)';
+  $params['option_group_name']['title'] = 'Option Group Name';
+  $params['option_group_name']['api.aliases'] = array('groupName');
+  $params['option_group_name']['type'] = CRM_Utils_Type::T_STRING;
+
+  $params['option_value_name']['description'] = 'option value name of the template (required if no id supplied)';
+  $params['option_value_name']['title'] = 'Option Value Name';
+  $params['option_value_name']['api.aliases'] = array('valueName');
+  $params['option_value_name']['type'] = CRM_Utils_Type::T_STRING;
 }
 
 /**
@@ -92,6 +103,37 @@ function _civicrm_api3_message_template_get_spec(&$params) {
  *   API result array.
  */
 function civicrm_api3_message_template_get($params) {
+  if ((empty($params['option_group_name']) && !empty($params['groupName']))) {
+    $params['option_group_name'] = $params['groupName'];
+  }
+  if ((empty($params['option_value_name']) && !empty($params['valueName']))) {
+    $params['option_value_name'] = $params['valueName'];
+  }
+
+    if (empty($params['id'])) {
+    if (empty($params['option_group_name']) || empty($params['option_value_name'])) {
+      throw new API_Exception(
+        "Mandatory key(s) missing from params array: requires id or option_group_name + option_value_name",
+        "mandatory_missing",
+        array("fields" => array('id', 'option_group_name', 'option_value_name'))
+      );
+    }
+    else {
+      try {
+        $optionGroup = civicrm_api3('OptionGroup', 'getsingle', array('name' => $params['option_group_name']));
+        $optionValue = civicrm_api3('OptionValue', 'getsingle', array(
+          'name' => $params['option_value_name'],
+          'option_group_id' => $optionGroup['id']
+        ));
+      }
+      catch (Exception $e) {
+        throw new API_Exception('Could not find optiongroup or optionvalue');
+      }
+      unset($params['option_group_name']);
+      unset($params['option_value_name']);
+      $params['workflow_id'] = $optionValue['id'];
+    }
+  }
   return _civicrm_api3_basic_get(_civicrm_api3_get_BAO(__FUNCTION__), $params);
 }
 
