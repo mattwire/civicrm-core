@@ -468,6 +468,7 @@ class CRM_Core_BAO_MessageTemplate extends CRM_Core_DAO_MessageTemplate {
     foreach ($params['tplParams'] as $name => $value) {
       $smarty->assign($name, $value);
     }
+
     foreach (array(
       'subject',
       'text',

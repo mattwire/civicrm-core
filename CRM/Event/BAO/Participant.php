@@ -1533,6 +1533,7 @@ UPDATE  civicrm_participant
       return array(FALSE);
     }
     $toEmail = CRM_Utils_Array::value('email', $contactDetails);
+
     if (empty($toEmail)) {
       return array(FALSE);
     }
