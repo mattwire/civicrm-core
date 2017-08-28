@@ -327,7 +327,7 @@ class CRM_Core_BAO_MessageTemplate extends CRM_Core_DAO_MessageTemplate {
    * @return array
    *   Array of four parameters: a boolean whether the email was sent, and the subject, text and HTML templates
    */
-  public static function sendTemplate($params, $send=TRUE) {
+  public static function sendTemplate($params) {
     $defaults = array(
       // option group name of the template
       'groupName' => NULL,
@@ -522,9 +522,7 @@ class CRM_Core_BAO_MessageTemplate extends CRM_Core_DAO_MessageTemplate {
         }
       }
 
-      if ($send) {
-        $sent = CRM_Utils_Mail::send($params);
-      }
+      $sent = CRM_Utils_Mail::send($params);
 
       if ($pdf_filename) {
         unlink($pdf_filename);
