@@ -1085,4 +1085,79 @@ $text
     $this->assertEquals($activity['campaign_id'], $campaign_id, 'Activity campaign_id does not match.');
   }
 
+  public function testSendSmsNoPhoneNumber() {
+    //$smsProvider = new testSMSProvider();
+    $smsProviderParams['provider_id'] = 1;
+
+    $contactId = $this->individualCreate();
+
+    // create a logged in USER since the code references it for sendEmail user.
+    $this->createLoggedInUser();
+    $session = CRM_Core_Session::singleton();
+    $loggedInUser = $session->get('userID');
+
+    $contactsResult = $this->civicrm_api('contact', 'get', array('id' => $contactId, 'version' => $this->_apiversion));
+    $contactDetails = $contactsResult['values'];
+
+    // Get contactIds from contact details
+    // FIXME: Update Activity BAO SendSMS to work out contactIds if blank
+    foreach($contactDetails as $contact){
+      $contactIds[]=$contact['contact_id'];
+    }
+
+    $activityParams['sms_text_message']=__FUNCTION__ . ' text';
+    $activityParams['activity_subject']=__FUNCTION__ . ' subject';
+
+    $userID = $loggedInUser;
+
+    list($sent, $activityId, $success) = CRM_Activity_BAO_Activity::sendSms(
+      $contactDetails,
+      $activityParams,
+      $smsProviderParams,
+      $contactIds,
+      $userID
+    );
+
+    $activity = $this->civicrm_api('activity', 'getsingle', array('id' => $activityId, 'version' => $this->_apiversion));
+    $outBoundSmsActivityId = CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity','activity_type_id', 'SMS');
+    $activityStatusCancelled = CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_status_id', 'Cancelled');
+    $details = 'Recipient phone number is invalid or recipient does not want to receive SMS';
+    $this->assertEquals($activity['activity_type_id'], $outBoundSmsActivityId, 'Wrong activity type is set.');
+    $this->assertEquals($activity['status_id'], $activityStatusCancelled, 'Expected activity status Cancelled.');
+    $this->assertEquals($activity['subject'], $activityParams['activity_subject'], 'Activity subject does not match.');
+    $this->assertEquals($activity['details'], $details, 'Activity details does not match.');
+  }
+
+  public function testSendSmsFixedPhoneNumber() {
+
+  }
+
+  public function testSendSmsMobilePhoneNumber() {
+
+  }
+
+  /**
+   * @param int $phoneType (-1=no phone, phone_type option group (1=fixed, 2=mobile)
+   */
+  public function createSendSmsTest($phoneType = 0) {
+    // Do this in the individual test..:
+    // Create a user, then a phone number
+    $this->_testSmsContactId = $this->createLoggedInUser();
+    // Create phone number
+    if ($phoneType == 0) {
+      // No phone number
+      return;
+    }
+    if ($phoneType == 2) {
+      // Create a mobile phone number
+
+    }
+    else {
+      // Create a fixed phone number
+
+    }
+
+    // Now run shared test
+  }
+
 }

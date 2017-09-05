@@ -120,6 +120,9 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
     if ($compContext) {
       $extraParams .= "&compContext={$compContext}";
     }
+    if ($activityId) {
+      $extraParams .= "&aid={$activityId}";
+    }
 
     $showView = TRUE;
     $showUpdate = $showDelete = FALSE;

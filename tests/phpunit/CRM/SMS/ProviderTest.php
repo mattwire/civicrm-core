@@ -101,14 +101,3 @@ class CRM_SMS_ProviderTest extends CiviUnitTestCase {
   }
 
 }
-
-/**
- * Test SMS provider to allow for testing
- */
-class testSMSProvider extends CRM_SMS_Provider {
-
-  public function send($recipients, $header, $message, $dncID = NULL) {
-    parent::send($recipients, $header, $message, $dncID);
-  }
-
-}

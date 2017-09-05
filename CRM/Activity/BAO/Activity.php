@@ -1634,21 +1634,21 @@ LEFT JOIN civicrm_activity_contact src ON (src.activity_id = ac.activity_id AND 
   }
 
   /**
-   * Send SMS.
+   * Send SMS.  Returns: bool $sent, int $activityId, int $success (number of sent SMS)
    *
    * @param array $contactDetails
    * @param array $activityParams
-   * @param array $smsParams
+   * @param array $smsProviderParams
    * @param $contactIds
    * @param int $userID
    *
-   * @return array
+   * @return array(bool $sent, int $activityId, int $success)
    * @throws CRM_Core_Exception
    */
   public static function sendSMS(
     &$contactDetails,
     &$activityParams,
-    &$smsParams = array(),
+    &$smsProviderParams = array(),
     &$contactIds,
     $userID = NULL
   ) {
@@ -1726,16 +1726,16 @@ LEFT JOIN civicrm_activity_contact src ON (src.activity_id = ac.activity_id AND 
 
       // Only send if the phone is of type mobile
       if ($values['phone_type_id'] == CRM_Core_PseudoConstant::getKey('CRM_Core_BAO_Phone', 'phone_type_id', 'Mobile')) {
-        $smsParams['To'] = $values['phone'];
+        $smsProviderParams['To'] = $values['phone'];
       }
       else {
-        $smsParams['To'] = '';
+        $smsProviderParams['To'] = '';
       }
 
       $sendResult = self::sendSMSMessage(
         $contactId,
         $tokenText,
-        $smsParams,
+        $smsProviderParams,
         $activityID,
         $userID
       );
@@ -1797,8 +1797,8 @@ LEFT JOIN civicrm_activity_contact src ON (src.activity_id = ac.activity_id AND 
       $toPhoneNumbers = CRM_Core_BAO_Phone::allPhones($toID, FALSE, 'Mobile', $filters);
       // To get primary mobile phonenumber,if not get the first mobile phonenumber
       if (!empty($toPhoneNumbers)) {
-        $toPhoneNumerDetails = reset($toPhoneNumbers);
-        $toPhoneNumber = CRM_Utils_Array::value('phone', $toPhoneNumerDetails);
+        $toPhoneNumberDetails = reset($toPhoneNumbers);
+        $toPhoneNumber = CRM_Utils_Array::value('phone', $toPhoneNumberDetails);
         // Contact allows to send sms
         $toDoNotSms = 0;
       }
@@ -1807,23 +1807,30 @@ LEFT JOIN civicrm_activity_contact src ON (src.activity_id = ac.activity_id AND 
     // make sure both phone are valid
     // and that the recipient wants to receive sms
     if (empty($toPhoneNumber) or $toDoNotSms) {
-      return PEAR::raiseError(
+      /*return PEAR::raiseError(
         'Recipient phone number is invalid or recipient does not want to receive SMS',
         NULL,
         PEAR_ERROR_RETURN
-      );
+      );*/
+      // Update the activity (status=failed)
+      $params['id'] = $activityID;
+      $params['status_id'] = CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_status_id', 'Cancelled');
+      $params['details'] = 'Recipient phone number is invalid or recipient does not want to receive SMS';
+      self::create($params);
     }
+    else {
+      // Prepare and send the actual SMS
+      $recipient = $smsParams['To'];
+      $smsParams['contact_id'] = $toID;
+      $smsParams['parent_activity_id'] = $activityID;
 
-    $recipient = $smsParams['To'];
-    $smsParams['contact_id'] = $toID;
-    $smsParams['parent_activity_id'] = $activityID;
-
-    $providerObj = CRM_SMS_Provider::singleton(array('provider_id' => $smsParams['provider_id']));
-    $sendResult = $providerObj->send($recipient, $smsParams, $tokenText, NULL, $userID);
-    if (PEAR::isError($sendResult)) {
-      return $sendResult;
+      $providerObj = CRM_SMS_Provider::singleton(array('provider_id' => $smsParams['provider_id']));
+      $sendResult = $providerObj->send($recipient, $smsParams, $tokenText, NULL, $userID);
+      if (PEAR::isError($sendResult)) {
+        return $sendResult;
+      }
     }
-
+    
     $activityContacts = CRM_Activity_BAO_ActivityContact::buildOptions('record_type_id', 'validate');
     $targetID = CRM_Utils_Array::key('Activity Targets', $activityContacts);
 
