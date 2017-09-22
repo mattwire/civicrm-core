@@ -789,35 +789,47 @@ class CRM_Member_Form_MembershipRenewal extends CRM_Member_Form {
   }
 
   private function submitRenewMembershipsPriceSet($contributionRecurID) {
-    // all organization types (e.g. Health Institute) by Type (e.g., Full Fee, Student)
-    $allOrgsByType = CRM_Member_BAO_MembershipType::getMembershipTypeOrganization();
-
-    // The membership types selected in the renew by priceset form.
-    $membershipTypesSelected = CRM_Member_Form_Membership::getSelectedMemberships(
-      $this->_priceSet,
-      $this->_params
-    );
-
     $renewedMemberships = array();
-
-    // All membership types that this contact has, by org.  Assumes one / org.  If multiple (for whatever bad data reason),
-    // heuristics are used.
-    $allMemTypesByOrg = CRM_Member_BAO_Membership::getContactMemberhipsByMembeshipOrg($this->_contactID);
-
     $priceFieldValueIds = array_keys($this->_params['lineItems'][$this->_priceSetId]);
-    $cnt = 0;
 
-    $membershipTypeValues = array();
-    foreach ($membershipTypesSelected as $memType) {
-      $org = $allOrgsByType[$memType];
-      $membershipIdToUpdate = empty($allMemTypesByOrg[$org]) ? NULL : $allMemTypesByOrg[$org]['membership_id'] ?: NULL;
-      $membership = $this->submitRenewMembershipSingle($membershipIdToUpdate, $memType, $contributionRecurID);
+    if (!empty($this->_id) && !empty($this->_memType)) {
+      $membershipId = $this->_id;
+      $membershipType = $this->_memType;
+      $membership = $this->submitRenewMembershipSingle($membershipId, $membershipType, $contributionRecurID);
       // set the id on the line item.  This will result in the proper line_item row being created later on in
       // CRM_Price_BAO_LineItem::processPriceSet (This is certainly a Demeter Law violation!)
-      $this->_params['lineItems'][$this->_priceSetId][$priceFieldValueIds[$cnt++]]['entity_id'] = $membership->id;
+      $this->_params['lineItems'][$this->_priceSetId][$priceFieldValueIds[0]]['entity_id'] = $membership->id;
       array_push($renewedMemberships, $membership);
-
       $membershipTypeValues[$membership->membership_type_id] = $membership;
+    }
+    else {
+      // all organization types (e.g. Health Institute) by Type (e.g., Full Fee, Student)
+      $allOrgsByType = CRM_Member_BAO_MembershipType::getMembershipTypeOrganization();
+
+      // The membership types selected in the renew by priceset form.
+      $membershipTypesSelected = CRM_Member_Form_Membership::getSelectedMemberships(
+        $this->_priceSet,
+        $this->_params
+      );
+
+      // All membership types that this contact has, by org.  Assumes one / org.  If multiple (for whatever bad data reason),
+      // heuristics are used.
+      $allMemTypesByOrg = CRM_Member_BAO_Membership::getContactMemberhipsByMembeshipOrg($this->_contactID);
+
+      $cnt = 0;
+
+      $membershipTypeValues = array();
+      foreach ($membershipTypesSelected as $memType) {
+        $org = $allOrgsByType[$memType];
+        $membershipIdToUpdate = empty($allMemTypesByOrg[$org]) ? NULL : $allMemTypesByOrg[$org]['membership_id'] ?: NULL;
+        $membership = $this->submitRenewMembershipSingle($membershipIdToUpdate, $memType, $contributionRecurID);
+        // set the id on the line item.  This will result in the proper line_item row being created later on in
+        // CRM_Price_BAO_LineItem::processPriceSet (This is certainly a Demeter Law violation!)
+        $this->_params['lineItems'][$this->_priceSetId][$priceFieldValueIds[$cnt++]]['entity_id'] = $membership->id;
+        array_push($renewedMemberships, $membership);
+
+        $membershipTypeValues[$membership->membership_type_id] = $membership;
+      }
     }
 
     // add line items to template for receipting.
