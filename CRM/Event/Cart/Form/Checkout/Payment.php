@@ -263,7 +263,7 @@ class CRM_Event_Cart_Form_Checkout_Payment extends CRM_Event_Cart_Form_Cart {
       $price_set = $price_sets[$price_set_id];
       $price_set_amount = array();
       CRM_Price_BAO_PriceSet::processAmount($price_set['fields'], $event_price_values, $price_set_amount);
-      $discountCode = $this->_price_values['discountcode'];
+      $discountCode = CRM_Utils_Array::value('discountcode', $this->_price_values);
       if (!empty($discountCode)) {
         $ret = $this->apply_discount($discountCode, $price_set_amount, $cost, $event_in_cart->event_id);
         if ($ret == FALSE) {
