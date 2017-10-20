@@ -164,6 +164,18 @@ class CRM_Member_Form_Task extends CRM_Core_Form {
     );
   }
 
+  public static function setExtraTokenDetails($memberIds) {
+    $extraParams = array();
+    $memberships = CRM_Utils_Token::getMembershipTokenDetails($memberIds);
+    foreach ($memberIds as $membershipId) {
+      $membership = $memberships[$membershipId];
+      // get contact information
+      $contactId = $membership['contact_id'];
+      $extraParams['contact_details'][$contactId] = array('membership_id' => $membershipId);
+    }
+    return $extraParams;
+  }
+
   /**
    * Simple shell that derived classes can call to add buttons to.
    * the form with a customized title for the main Submit
