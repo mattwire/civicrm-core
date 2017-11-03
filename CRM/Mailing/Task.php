@@ -36,20 +36,7 @@
  * used by the search forms.
  *
  */
-class CRM_Mailing_Task {
-  /**
-   * The task array.
-   *
-   * @var array
-   */
-  static $_tasks = NULL;
-
-  /**
-   * The optional task array.
-   *
-   * @var array
-   */
-  static $_optionalTasks = NULL;
+class CRM_Mailing_Task extends CRM_Core_Task {
 
   /**
    * These tasks are the core set of tasks that the user can perform
@@ -58,10 +45,10 @@ class CRM_Mailing_Task {
    * @return array
    *   the set of tasks for a group of contacts.
    */
-  public static function &tasks() {
+  public static function tasks() {
     if (!(self::$_tasks)) {
       self::$_tasks = array(
-        1 => array(
+        self::PRINT_MAILINGS => array(
           'title' => ts('Print Mailing Recipients'),
           'class' => 'CRM_Mailing_Form_Task_Print',
           'result' => FALSE,
@@ -76,28 +63,20 @@ class CRM_Mailing_Task {
   }
 
   /**
-   * These tasks are the core set of task titles
-   * on mailing recipients.
-   *
-   * @return array
-   *   the set of task titles.
-   */
-  public static function &taskTitles() {
-    return array();
-  }
-
-  /**
    * Show tasks selectively based on the permission level
    * of the user.
    *
    * @param int $permission
+   * @param array $params
    *
    * @return array
    *   set of tasks that are valid for the user
    */
-  public static function &permissionedTaskTitles($permission) {
-    $task = array();
-    return $task;
+  public static function permissionedTaskTitles($permission, $params = array()) {
+    $tasks = array();
+
+    $tasks = parent::corePermissionedTaskTitles($tasks, $permission, $params);
+    return $tasks;
   }
 
   /**
@@ -113,8 +92,9 @@ class CRM_Mailing_Task {
     self::tasks();
     if (!$value || !CRM_Utils_Array::value($value, self::$_tasks)) {
       // make the print task by default
-      $value = 1;
+      $value = self::PRINT_MAILINGS;
     }
+
     return array(
       self::$_tasks[$value]['class'],
       self::$_tasks[$value]['result'],

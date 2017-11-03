@@ -36,22 +36,7 @@
  *
  * Used by the search forms
  */
-class CRM_Case_Task {
-  const DELETE_CASES = 1, PRINT_CASES = 2, EXPORT_CASES = 3, RESTORE_CASES = 4;
-
-  /**
-   * The task array
-   *
-   * @var array
-   */
-  static $_tasks = NULL;
-
-  /**
-   * The optional task array
-   *
-   * @var array
-   */
-  static $_optionalTasks = NULL;
+class CRM_Case_Task extends CRM_Core_Task {
 
   /**
    * These tasks are the core set of tasks that the user can perform
@@ -60,20 +45,20 @@ class CRM_Case_Task {
    * @return array
    *   the set of tasks for a group of contacts
    */
-  public static function &tasks() {
+  public static function tasks() {
     if (!self::$_tasks) {
       self::$_tasks = array(
-        1 => array(
+        self::DELETE_CASES => array(
           'title' => ts('Delete cases'),
           'class' => 'CRM_Case_Form_Task_Delete',
           'result' => FALSE,
         ),
-        2 => array(
+        self::PRINT_CASES => array(
           'title' => ts('Print selected rows'),
           'class' => 'CRM_Case_Form_Task_Print',
           'result' => FALSE,
         ),
-        3 => array(
+        self::EXPORT_CASES => array(
           'title' => ts('Export cases'),
           'class' => array(
             'CRM_Export_Form_Select',
@@ -81,12 +66,12 @@ class CRM_Case_Task {
           ),
           'result' => FALSE,
         ),
-        4 => array(
+        self::RESTORE_CASES => array(
           'title' => ts('Restore cases'),
           'class' => 'CRM_Case_Form_Task_Restore',
           'result' => FALSE,
         ),
-        5 => array(
+        self::PDF_LETTER => array(
           'title' => ts('Print/merge Document'),
           'class' => 'CRM_Case_Form_Task_PDF',
           'result' => FALSE,
@@ -95,7 +80,7 @@ class CRM_Case_Task {
 
       //CRM-4418, check for delete
       if (!CRM_Core_Permission::check('delete in CiviCase')) {
-        unset(self::$_tasks[1]);
+        unset(self::$_tasks[self::DELETE_CASES]);
       }
 
       CRM_Utils_Hook::searchTasks('case', self::$_tasks);
@@ -106,42 +91,16 @@ class CRM_Case_Task {
   }
 
   /**
-   * These tasks are the core set of task titles.
-   *
-   * @return array
-   *   the set of task titles
-   */
-  public static function &taskTitles() {
-    self::tasks();
-    $titles = array();
-    foreach (self::$_tasks as $id => $value) {
-      $titles[$id] = $value['title'];
-    }
-    return $titles;
-  }
-
-  /**
-   * These tasks get added based on the context the user is in.
-   *
-   * @return array
-   *   the set of optional tasks for a group of contacts
-   */
-  public static function &optionalTaskTitle() {
-    $tasks = array();
-    return $tasks;
-  }
-
-  /**
    * Show tasks selectively based on the permission level.
    * of the user
    *
    * @param int $permission
+   * @param array $params
    *
    * @return array
    *   set of tasks that are valid for the user
    */
-  public static function &permissionedTaskTitles($permission) {
-    $tasks = array();
+  public static function permissionedTaskTitles($permission, $params = array()) {
     if (($permission == CRM_Core_Permission::EDIT)
       || CRM_Core_Permission::check('access all cases and activities')
       || CRM_Core_Permission::check('access my cases and activities')
@@ -150,13 +109,15 @@ class CRM_Case_Task {
     }
     else {
       $tasks = array(
-        3 => self::$_tasks[3]['title'],
+        self::EXPORT_CASES => self::$_tasks[self::EXPORT_CASES]['title'],
       );
       //CRM-4418,
       if (CRM_Core_Permission::check('delete in CiviCase')) {
-        $tasks[1] = self::$_tasks[1]['title'];
+        $tasks[self::DELETE_CASES] = self::$_tasks[self::DELETE_CASES]['title'];
       }
     }
+
+    $tasks = parent::corePermissionedTaskTitles($tasks, $permission, $params);
     return $tasks;
   }
 
@@ -172,7 +133,7 @@ class CRM_Case_Task {
     self::tasks();
     if (!$value || !CRM_Utils_Array::value($value, self::$_tasks)) {
       // make the print task by default
-      $value = 2;
+      $value = self::PRINT_CASES;
     }
 
     return array(
