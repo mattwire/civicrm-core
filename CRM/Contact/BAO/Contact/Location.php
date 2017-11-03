@@ -78,33 +78,33 @@ WHERE     civicrm_contact.id = %1";
    * @param int $id
    *   Id of the contact.
    *
-   * @param null $type
+   * @param int $locationTypeID
    *
    * @return array
-   *   tuple of display_name and sms if found, or (null,null)
+   *   array of (display_name, phone, do_not_sms flag), or (null,null,null)
    */
-  public static function getPhoneDetails($id, $type = NULL) {
+  public static function getPhoneDetails($id, $locationTypeID = NULL, $isPrimary = TRUE, $phoneTypeID = NULL) {
     if (!$id) {
-      return array(NULL, NULL);
+      return array(NULL, NULL, NULL);
     }
 
-    $cond = NULL;
-    if ($type) {
-      $cond = " AND civicrm_phone.phone_type_id = '$type'";
+    $params = array(
+      'location_type_id' => $locationTypeID,
+      'contact_id' => $id,
+      'return' => array("contact_id.display_name", "phone", "contact_id.do_not_sms"),
+      'options' => array('limit' => 1, 'sort' => "is_primary DESC"),
+    );
+    if ($isPrimary) {
+      $params['is_primary'] = 1;
     }
+    if ($phoneTypeID) {
+      $params['phone_type_id'] = $phoneTypeID;
+    }
+    $phones = civicrm_api3('Phone', 'get', $params);
 
-    $sql = "
-   SELECT civicrm_contact.display_name, civicrm_phone.phone, civicrm_contact.do_not_sms
-     FROM civicrm_contact
-LEFT JOIN civicrm_phone ON ( civicrm_phone.contact_id = civicrm_contact.id )
-    WHERE civicrm_phone.is_primary = 1
-          $cond
-      AND civicrm_contact.id = %1";
-
-    $params = array(1 => array($id, 'Integer'));
-    $dao = CRM_Core_DAO::executeQuery($sql, $params);
-    if ($dao->fetch()) {
-      return array($dao->display_name, $dao->phone, $dao->do_not_sms);
+    if ($phones['count'] > 0) {
+      $phone = reset($phones['values']);
+      return array($phone['contact_id.display_name'], $phone['phone'], $phone['do_not_sms']);
     }
     return array(NULL, NULL, NULL);
   }
