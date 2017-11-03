@@ -39,22 +39,7 @@
  * used by the search forms
  *
  */
-class CRM_Member_Task {
-  const DELETE_MEMBERS = 1, PRINT_MEMBERS = 2, EXPORT_MEMBERS = 3, EMAIL_CONTACTS = 4, BATCH_MEMBERS = 5;
-
-  /**
-   * The task array
-   *
-   * @var array
-   */
-  static $_tasks = NULL;
-
-  /**
-   * The optional task array
-   *
-   * @var array
-   */
-  static $_optionalTasks = NULL;
+class CRM_Member_Task extends CRM_Core_Task {
 
   /**
    * These tasks are the core set of tasks that the user can perform
@@ -63,66 +48,64 @@ class CRM_Member_Task {
    * @return array
    *   the set of tasks for a group of contacts
    */
-  public static function &tasks() {
-    if (!(self::$_tasks)) {
-      self::$_tasks = array(
-        1 => array(
-          'title' => ts('Delete memberships'),
-          'class' => 'CRM_Member_Form_Task_Delete',
-          'result' => FALSE,
+  public static function tasks() {
+    self::$_tasks = array(
+      self::DELETE_MEMBERS => array(
+        'title' => ts('Delete memberships'),
+        'class' => 'CRM_Member_Form_Task_Delete',
+        'result' => FALSE,
+      ),
+      self::PRINT_MEMBERS => array(
+        'title' => ts('Print selected rows'),
+        'class' => 'CRM_Member_Form_Task_Print',
+        'result' => FALSE,
+      ),
+      self::EXPORT_MEMBERS => array(
+        'title' => ts('Export members'),
+        'class' => array(
+          'CRM_Export_Form_Select',
+          'CRM_Export_Form_Map',
         ),
-        2 => array(
-          'title' => ts('Print selected rows'),
-          'class' => 'CRM_Member_Form_Task_Print',
-          'result' => FALSE,
+        'result' => FALSE,
+      ),
+      self::EMAIL_MEMBERS => array(
+        'title' => ts('Email - send now'),
+        'class' => 'CRM_Member_Form_Task_Email',
+        'result' => TRUE,
+      ),
+      self::BATCH_MEMBERS => array(
+        'title' => ts('Update multiple memberships'),
+        'class' => array(
+          'CRM_Member_Form_Task_PickProfile',
+          'CRM_Member_Form_Task_Batch',
         ),
-        3 => array(
-          'title' => ts('Export members'),
-          'class' => array(
-            'CRM_Export_Form_Select',
-            'CRM_Export_Form_Map',
-          ),
-          'result' => FALSE,
+        'result' => TRUE,
+      ),
+      self::LABEL_MEMBERS => array(
+        'title' => ts('Mailing labels - print'),
+        'class' => array(
+          'CRM_Member_Form_Task_Label',
         ),
-        4 => array(
-          'title' => ts('Email - send now'),
-          'class' => 'CRM_Member_Form_Task_Email',
-          'result' => TRUE,
-        ),
-        5 => array(
-          'title' => ts('Update multiple memberships'),
-          'class' => array(
-            'CRM_Member_Form_Task_PickProfile',
-            'CRM_Member_Form_Task_Batch',
-          ),
-          'result' => TRUE,
-        ),
-        6 => array(
-          'title' => ts('Mailing labels - print'),
-          'class' => array(
-            'CRM_Member_Form_Task_Label',
-          ),
-          'result' => TRUE,
-        ),
-        7 => array(
-          'title' => ts('Print/merge document for memberships'),
-          'class' => 'CRM_Member_Form_Task_PDFLetter',
-          'result' => FALSE,
-        ),
-      );
+        'result' => TRUE,
+      ),
+      self::PRINT_FOR_MEMBERS => array(
+        'title' => ts('Print/merge document for memberships'),
+        'class' => 'CRM_Member_Form_Task_PDFLetter',
+        'result' => FALSE,
+      ),
+    );
 
-      //CRM-4418, check for delete
-      if (!CRM_Core_Permission::check('delete in CiviMember')) {
-        unset(self::$_tasks[1]);
-      }
-      //CRM-12920 - check for edit permission
-      if (!CRM_Core_Permission::check('edit memberships')) {
-        unset(self::$_tasks[5]);
-      }
-
-      CRM_Utils_Hook::searchTasks('membership', self::$_tasks);
-      asort(self::$_tasks);
+    //CRM-4418, check for delete
+    if (!CRM_Core_Permission::check('delete in CiviMember')) {
+      unset(self::$_tasks[self::DELETE_MEMBERS]);
     }
+    //CRM-12920 - check for edit permission
+    if (!CRM_Core_Permission::check('edit memberships')) {
+      unset(self::$_tasks[self::BATCH_MEMBERS]);
+    }
+
+    CRM_Utils_Hook::searchTasks('membership', self::$_tasks);
+    asort(self::$_tasks);
 
     return self::$_tasks;
   }
@@ -134,13 +117,8 @@ class CRM_Member_Task {
    * @return array
    *   the set of task titles
    */
-  public static function &taskTitles() {
-    self::tasks();
-    $titles = array();
-    foreach (self::$_tasks as $id => $value) {
-      $titles[$id] = $value['title'];
-    }
-    return $titles;
+  public static function taskTitles() {
+    return parent::taskTitles();
   }
 
   /**
@@ -148,11 +126,13 @@ class CRM_Member_Task {
    * of the user
    *
    * @param int $permission
+   * @param bool $deletedContacts
+   *   Are these tasks for operating on deleted contacts?.
    *
    * @return array
    *   set of tasks that are valid for the user
    */
-  public static function &permissionedTaskTitles($permission) {
+  public static function permissionedTaskTitles($permission, $deletedContacts = FALSE) {
     $tasks = array();
     if (($permission == CRM_Core_Permission::EDIT)
       || CRM_Core_Permission::check('edit memberships')
@@ -161,12 +141,12 @@ class CRM_Member_Task {
     }
     else {
       $tasks = array(
-        3 => self::$_tasks[3]['title'],
-        4 => self::$_tasks[4]['title'],
+        self::EXPORT_MEMBERS => self::$_tasks[self::EXPORT_MEMBERS]['title'],
+        self::EMAIL_MEMBERS => self::$_tasks[self::EMAIL_MEMBERS]['title'],
       );
       //CRM-4418,
       if (CRM_Core_Permission::check('delete in CiviMember')) {
-        $tasks[1] = self::$_tasks[1]['title'];
+        $tasks[self::DELETE_MEMBERS] = self::$_tasks[self::DELETE_MEMBERS]['title'];
       }
     }
     return $tasks;
@@ -184,13 +164,10 @@ class CRM_Member_Task {
   public static function getTask($value) {
     self::tasks();
     if (!$value || !CRM_Utils_Array::value($value, self::$_tasks)) {
-      // make the print task by default
-      $value = 2;
+      // Make the print task the default
+      $value = self::PRINT_MEMBERS;
     }
-    return array(
-      self::$_tasks[$value]['class'],
-      self::$_tasks[$value]['result'],
-    );
+    return parent::getTask($value);
   }
 
 }

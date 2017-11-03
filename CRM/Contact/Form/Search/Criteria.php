@@ -198,8 +198,8 @@ class CRM_Contact_Form_Search_Criteria {
       'operator',
       ts('Search Operator'),
       array(
-        'AND' => ts('AND'),
-        'OR' => ts('OR'),
+        CRM_Core_Form_Search::SEARCH_OPERATOR_AND => ts('AND'),
+        CRM_Core_Form_Search::SEARCH_OPERATOR_OR => ts('OR'),
       ),
       array('allowClear' => FALSE)
     );

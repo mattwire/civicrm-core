@@ -90,6 +90,13 @@ class CRM_Core_Form_Search extends CRM_Core_Form {
   protected $entityReferenceFields = array();
 
   /**
+   * Constants for search operators
+   */
+  const
+    SEARCH_OPERATOR_AND = 'AND',
+    SEARCH_OPERATOR_OR = 'OR';
+
+  /**
    * Builds the list of tasks or actions that a searcher can perform on a result set.
    *
    * To modify the task list, child classes should alter $this->_taskList,
