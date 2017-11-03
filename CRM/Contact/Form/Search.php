@@ -201,7 +201,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
   public static function setModeValues() {
     if (!self::$_modeValues) {
       self::$_modeValues = array(
-        1 => array(
+        CRM_Contact_BAO_Query::MODE_CONTACTS => array(
           'selectorName' => self::$_selectorName,
           'selectorLabel' => ts('Contacts'),
           'taskFile' => 'CRM/Contact/Form/Search/ResultTasks.tpl',
@@ -210,7 +210,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
           'resultContext' => NULL,
           'taskClassName' => 'CRM_Contact_Task',
         ),
-        2 => array(
+        CRM_Contact_BAO_Query::MODE_CONTRIBUTE => array(
           'selectorName' => 'CRM_Contribute_Selector_Search',
           'selectorLabel' => ts('Contributions'),
           'taskFile' => 'CRM/common/searchResultTasks.tpl',
@@ -219,7 +219,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
           'resultContext' => 'Search',
           'taskClassName' => 'CRM_Contribute_Task',
         ),
-        3 => array(
+        CRM_Contact_BAO_Query::MODE_EVENT => array(
           'selectorName' => 'CRM_Event_Selector_Search',
           'selectorLabel' => ts('Event Participants'),
           'taskFile' => 'CRM/common/searchResultTasks.tpl',
@@ -228,7 +228,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
           'resultContext' => 'Search',
           'taskClassName' => 'CRM_Event_Task',
         ),
-        4 => array(
+        CRM_Contact_BAO_Query::MODE_ACTIVITY => array(
           'selectorName' => 'CRM_Activity_Selector_Search',
           'selectorLabel' => ts('Activities'),
           'taskFile' => 'CRM/common/searchResultTasks.tpl',
@@ -237,7 +237,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
           'resultContext' => 'Search',
           'taskClassName' => 'CRM_Activity_Task',
         ),
-        5 => array(
+        CRM_Contact_BAO_Query::MODE_MEMBER => array(
           'selectorName' => 'CRM_Member_Selector_Search',
           'selectorLabel' => ts('Memberships'),
           'taskFile' => "CRM/common/searchResultTasks.tpl",
@@ -246,7 +246,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
           'resultContext' => 'Search',
           'taskClassName' => 'CRM_Member_Task',
         ),
-        6 => array(
+        CRM_Contact_BAO_Query::MODE_CASE => array(
           'selectorName' => 'CRM_Case_Selector_Search',
           'selectorLabel' => ts('Cases'),
           'taskFile' => "CRM/common/searchResultTasks.tpl",
@@ -255,7 +255,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
           'resultContext' => 'Search',
           'taskClassName' => 'CRM_Case_Task',
         ),
-        7 => array(
+        CRM_Contact_BAO_Query::MODE_CONTACTSRELATED => array(
           'selectorName' => self::$_selectorName,
           'selectorLabel' => ts('Related Contacts'),
           'taskFile' => 'CRM/Contact/Form/Search/ResultTasks.tpl',
@@ -264,7 +264,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
           'resultContext' => NULL,
           'taskClassName' => 'CRM_Contact_Task',
         ),
-        8 => array(
+        CRM_Contact_BAO_Query::MODE_MAILING => array(
           'selectorName' => 'CRM_Mailing_Selector_Search',
           'selectorLabel' => ts('Mailings'),
           'taskFile' => "CRM/common/searchResultTasks.tpl",
@@ -282,11 +282,11 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
    *
    * @return mixed
    */
-  public static function getModeValue($mode = 1) {
+  public static function getModeValue($mode = CRM_Contact_BAO_Query::MODE_CONTACTS) {
     self::setModeValues();
 
     if (!array_key_exists($mode, self::$_modeValues)) {
-      $mode = 1;
+      $mode = CRM_Contact_BAO_Query::MODE_CONTACTS;
     }
 
     return self::$_modeValues[$mode];
@@ -298,25 +298,36 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
   public static function getModeSelect() {
     self::setModeValues();
 
-    $select = array();
+    $componentModes = array();
     foreach (self::$_modeValues as $id => & $value) {
-      $select[$id] = $value['selectorLabel'];
+      $componentModes[$id] = $value['selectorLabel'];
     }
 
-    // unset contributions or participants if user does not have
-    // permission on them
+    $enabledComponents = CRM_Core_Component::getEnabledComponents();
+
+    // unset disabled components
+    if (!array_key_exists('CiviMail', $enabledComponents)) {
+      unset($componentModes[CRM_Contact_BAO_Query::MODE_MAILING]);
+    }
+
+    // unset contributions or participants if user does not have permission on them
     if (!CRM_Core_Permission::access('CiviContribute')) {
-      unset($select['2']);
+      unset($componentModes[CRM_Contact_BAO_Query::MODE_CONTRIBUTE]);
     }
 
     if (!CRM_Core_Permission::access('CiviEvent')) {
-      unset($select['3']);
+      unset($componentModes[CRM_Contact_BAO_Query::MODE_EVENT]);
+    }
+
+    if (!CRM_Core_Permission::access('CiviMember')) {
+      unset($componentModes[CRM_Contact_BAO_Query::MODE_MEMBER]);
     }
 
     if (!CRM_Core_Permission::check('view all activities')) {
-      unset($select['4']);
+      unset($componentModes[CRM_Contact_BAO_Query::MODE_ACTIVITY]);
     }
-    return $select;
+
+    return $componentModes;
   }
 
   /**
@@ -328,7 +339,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
     if ($this->_context !== 'amtg') {
       $permission = CRM_Core_Permission::getPermission();
 
-      if ($this->_componentMode == 1 || $this->_componentMode == 7) {
+      if ($this->_componentMode == CRM_Contact_BAO_Query::MODE_CONTACTS || $this->_componentMode == CRM_Contact_BAO_Query::MODE_CONTACTSRELATED) {
         $this->_taskList += CRM_Contact_Task::permissionedTaskTitles($permission,
           CRM_Utils_Array::value('deleted_contacts', $this->_formValues)
         );
@@ -360,7 +371,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
     $permission = CRM_Core_Permission::getPermission();
     // some tasks.. what do we want to do with the selected contacts ?
     $tasks = array();
-    if ($this->_componentMode == 1 || $this->_componentMode == 7) {
+    if ($this->_componentMode == CRM_Contact_BAO_Query::MODE_CONTACTS || $this->_componentMode == CRM_Contact_BAO_Query::MODE_CONTACTSRELATED) {
       $tasks += CRM_Contact_Task::permissionedTaskTitles($permission,
         CRM_Utils_Array::value('deleted_contacts', $this->_formValues)
       );
@@ -474,7 +485,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
     $selectedContactIds = array();
     $qfKeyParam = CRM_Utils_Array::value('qfKey', $this->_formValues);
     // We use ajax to handle selections only if the search results component_mode is set to "contacts"
-    if ($qfKeyParam && ($this->get('component_mode') <= 1 || $this->get('component_mode') == 7)) {
+    if ($qfKeyParam && ($this->get('component_mode') <= CRM_Contact_BAO_Query::MODE_CONTACTS || $this->get('component_mode') == CRM_Contact_BAO_Query::MODE_CONTACTSRELATED)) {
       $this->addClass('crm-ajax-selection-form');
       $qfKeyParam = "civicrm search {$qfKeyParam}";
       $selectedContactIdsArr = CRM_Core_BAO_PrevNextCache::getSelection($qfKeyParam);
@@ -516,7 +527,7 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
     $this->_sortByCharacter = CRM_Utils_Request::retrieve('sortByCharacter', 'String', $this);
     $this->_ufGroupID = CRM_Utils_Request::retrieve('id', 'Positive', $this);
     $this->_componentMode = CRM_Utils_Request::retrieve('component_mode', 'Positive', $this, FALSE, CRM_Contact_BAO_Query::MODE_CONTACTS, $_REQUEST);
-    $this->_operator = CRM_Utils_Request::retrieve('operator', 'String', $this, FALSE, CRM_Core_Form_Search::SEARCH_OPERATOR_AND, 'REQUEST');
+    $this->_operator = CRM_Utils_Request::retrieve('operator', 'String', $this, FALSE, CRM_Contact_BAO_Query::SEARCH_OPERATOR_AND, 'REQUEST');
 
     /**
      * set the button names
@@ -648,9 +659,9 @@ class CRM_Contact_Form_Search extends CRM_Core_Form_Search {
     $this->assign('id',
       CRM_Utils_Array::value('uf_group_id', $this->_formValues)
     );
-    $operator = CRM_Utils_Array::value('operator', $this->_formValues, self::SEARCH_OPERATOR_AND);
+    $operator = CRM_Utils_Array::value('operator', $this->_formValues, CRM_Contact_BAO_Query::SEARCH_OPERATOR_AND);
     $this->set('queryOperator', $operator);
-    if ($operator == self::SEARCH_OPERATOR_OR) {
+    if ($operator == CRM_Contact_BAO_Query::SEARCH_OPERATOR_OR) {
       $this->assign('operator', ts('OR'));
     }
     else {
