@@ -89,18 +89,19 @@ class CRM_Contribute_Form_Task_PDFLetterCommon extends CRM_Contact_Form_Task_PDF
         }
         $contact['is_sent'][$groupBy][$groupByID] = TRUE;
       }
-      // update dates (do it for each contribution including grouped recurring contribution)
-      //@todo - the 2 calls below bypass all hooks. Using the api would possibly be slower than one call but not than 2
+      // Update receipt/thankyou dates
+      $contributionParams = array('id' => $contributionId);
       if ($receipt_update) {
-        $result = CRM_Core_DAO::setFieldValue('CRM_Contribute_DAO_Contribution', $contributionId, 'receipt_date', $nowDate);
-        if ($result) {
-          $receipts++;
-        }
+        $contributionParams['receipt_date'] = $nowDate;
       }
       if ($thankyou_update) {
-        $result = CRM_Core_DAO::setFieldValue('CRM_Contribute_DAO_Contribution', $contributionId, 'thankyou_date', $nowDate);
-        if ($result) {
-          $thanks++;
+        $contributionParams['thankyou_date'] = $nowDate;
+      }
+      if ($receipt_update || $thankyou_update) {
+        $result = civicrm_api3('Contribution', 'create', $contributionParams);
+        if (empty($result['is_error'])) {
+          $receipt_update ? $receipts++ : NULL;
+          $thankyou_update ? $thanks++ : NULL;
         }
       }
     }
