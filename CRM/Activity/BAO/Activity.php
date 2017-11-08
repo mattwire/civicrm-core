@@ -918,7 +918,7 @@ class CRM_Activity_BAO_Activity extends CRM_Activity_DAO_Activity {
       $sql .= "$name $desc,\n";
       $insertValueSQL[] = $name;
       if ($name == 'source_contact_name' && CRM_Utils_SQL::supportsFullGroupBy()) {
-        $selectColumns[] = "ANY_VALUE(tbl.$name)";
+        $selectColumns[] = "tbl.$name";
       }
       else {
         $selectColumns[] = "tbl.$name";
