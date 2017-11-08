@@ -78,8 +78,19 @@ class CRM_Activity_Form_ActivityLinks extends CRM_Core_Form {
         }
         // Check for existence of a mobile phone and ! do not SMS privacy setting
         $mobileTypeID = CRM_Core_PseudoConstant::getKey('CRM_Core_BAO_Phone', 'phone_type_id', 'Mobile');
-        list($name, $phone, $doNotSMS) = CRM_Contact_BAO_Contact_Location::getPhoneDetails($contactId, $mobileTypeID);
-        if (!$doNotSMS && $phone) {
+        try {
+          $phone = civicrm_api3('Phone', 'getsingle', array(
+            'return' => array("contact_id.do_not_sms", "phone"),
+            'phone_type_id' => $mobileTypeID,
+            'contact_id' => $contactId,
+            'options' => array('limit' => 1, 'sort' => "is_primary DESC"),
+          ));
+        }
+        catch (CiviCRM_API3_Exception $e) {
+          // No mobile number found
+          continue;
+        }
+        if (!$phone['contact_id.do_not_sms'] && $phone['phone']) {
           $url = 'civicrm/activity/sms/add';
         }
         else {
