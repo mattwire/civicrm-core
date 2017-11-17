@@ -571,12 +571,6 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form {
     if ($this->_amount > 0.0) {
       $assignCCInfo = TRUE;
     }
-    elseif (!empty($this->_params['selectMembership'])) {
-      $memFee = CRM_Core_DAO::getFieldValue('CRM_Member_DAO_MembershipType', $this->_params['selectMembership'], 'minimum_fee');
-      if ($memFee > 0.0) {
-        $assignCCInfo = TRUE;
-      }
-    }
 
     // The concept of contributeMode is deprecated.
     // The payment processor object can provide info about the fields it shows.
