@@ -5614,10 +5614,12 @@ LIMIT 1;";
    *
    */
   public static function createProportionalEntry($entityParams, $eftParams) {
-    $paid = $entityParams['line_item_amount'] * ($entityParams['trxn_total_amount'] / $entityParams['contribution_total_amount']);
-    // Record Entity Financial Trxn; CRM-20145
-    $eftParams['amount'] = CRM_Contribute_BAO_Contribution_Utils::formatAmount($paid);
-    civicrm_api3('EntityFinancialTrxn', 'create', $eftParams);
+    if (!empty((float) $entityParams['contribution_total_amount'])) {
+      $paid = $entityParams['line_item_amount'] * ($entityParams['trxn_total_amount'] / $entityParams['contribution_total_amount']);
+      // Record Entity Financial Trxn; CRM-20145
+      $eftParams['amount'] = CRM_Contribute_BAO_Contribution_Utils::formatAmount($paid);
+      civicrm_api3('EntityFinancialTrxn', 'create', $eftParams);
+    }
   }
 
   /**
