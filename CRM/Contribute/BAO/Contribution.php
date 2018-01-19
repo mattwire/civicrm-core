@@ -5403,29 +5403,8 @@ LEFT JOIN  civicrm_contribution on (civicrm_contribution.contact_id = civicrm_co
           'membership_activity_status' => 'Completed',
         );
 
-        // CRM-8141 update the membership type with the value recorded in log when membership created/renewed
-        // this picks up membership type changes during renewals
-        // @todo this is almost certainly an obsolete sql call, the pre-change
-        // membership is accessible via $this->_relatedObjects
-        $sql = "
-SELECT    membership_type_id
-FROM      civicrm_membership_log
-WHERE     membership_id={$membershipParams['id']}
-ORDER BY  id DESC
-LIMIT 1;";
-        $dao = CRM_Core_DAO::executeQuery($sql);
-        if ($dao->fetch()) {
-          if (!empty($dao->membership_type_id)) {
-            $membershipParams['membership_type_id'] = $dao->membership_type_id;
-          }
-        }
-        $dao->free();
-
-        // Unclear why this is here but this function is overloaded by repeattransaction.
-        if ($contributionStatus === 'Pending') {
-          $membershipParams['num_terms'] = 0;
-        }
-        else {
+        // Only renew membership (set num_terms > 0) if we have a completed contribution.
+        if ($contributionStatus === 'Completed') {
           $membershipParams['num_terms'] = $contribution->getNumTermsByContributionAndMembershipType(
             $membershipParams['membership_type_id'],
             $primaryContributionID
@@ -5451,6 +5430,11 @@ LIMIT 1;";
           $params['exclude_is_admin'] = TRUE;
           $membershipParams['is_override'] = FALSE;
         }
+        else {
+          // Don't renew the membership
+          $membershipParams['num_terms'] = 0;
+        }
+
         //CRM-17723 - reset static $relatedContactIds array()
         // @todo move it to Civi Statics.
         $var = TRUE;
