@@ -143,6 +143,8 @@ function civicrm_api3_membership_create($params) {
   else {
     // edit mode
     $params['action'] = CRM_Core_Action::UPDATE;
+    // $ids['membership'] is required in CRM_Price_BAO_LineItem::processPriceSet
+    $ids['membership'] = $params['id'];
   }
 
   $membershipBAO = CRM_Member_BAO_Membership::create($params, $ids, TRUE);
