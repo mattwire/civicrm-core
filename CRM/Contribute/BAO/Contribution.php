@@ -5395,6 +5395,10 @@ LEFT JOIN  civicrm_contribution on (civicrm_contribution.contact_id = civicrm_co
   protected static function updateMembershipBasedOnCompletionOfContribution($contribution, $memberships, $primaryContributionID, $changeDate, $contributionStatus = 'Completed') {
     foreach ($memberships as $membershipTypeIdKey => $membership) {
       if ($membership) {
+        if (!CRM_Member_BAO_Membership::isRecurFrequencyEqualToMembershipType($membership->membership_type_id, $membership->contribution_recur_id)) {
+          Civi::log()->warning('You have enabled auto-renew on membership (id=' . $membership->id . ') but the frequencies do not match! The membership will not be auto-renewed.');
+          continue;
+        }
         $membershipParams = array(
           'id' => $membership->id,
           'contact_id' => $membership->contact_id,
