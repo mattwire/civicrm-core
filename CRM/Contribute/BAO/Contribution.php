@@ -4537,6 +4537,11 @@ WHERE eft.financial_trxn_id IN ({$trxnId}, {$baseTrxnId['financialTrxnId']})
 
     $participant = CRM_Utils_Array::value('participant', $objects);
     $memberships = CRM_Utils_Array::value('membership', $objects);
+    // FIXME: is this if necessary?
+    if (is_numeric($memberships)) {
+      $memberships = array($objects['membership']);
+    }
+
     $recurContrib = CRM_Utils_Array::value('contributionRecur', $objects);
     $recurringContributionID = (empty($recurContrib->id)) ? NULL : $recurContrib->id;
     $event = CRM_Utils_Array::value('event', $objects);
@@ -4583,10 +4588,6 @@ WHERE eft.financial_trxn_id IN ({$trxnId}, {$baseTrxnId['financialTrxnId']})
 
     self::repeatTransaction($contribution, $input, $contributionParams, $paymentProcessorId);
     $contributionParams['financial_type_id'] = $contribution->financial_type_id;
-
-    if (is_numeric($memberships)) {
-      $memberships = array($objects['membership']);
-    }
 
     $values = array();
     if (isset($input['is_email_receipt'])) {
@@ -5402,12 +5403,6 @@ LEFT JOIN  civicrm_contribution on (civicrm_contribution.contact_id = civicrm_co
           'membership_activity_status' => 'Completed',
         );
 
-        $currentMembership = CRM_Member_BAO_Membership::getContactMembership($membershipParams['contact_id'],
-          $membershipParams['membership_type_id'],
-          $membershipParams['is_test'],
-          $membershipParams['id']
-        );
-
         // CRM-8141 update the membership type with the value recorded in log when membership created/renewed
         // this picks up membership type changes during renewals
         // @todo this is almost certainly an obsolete sql call, the pre-change
@@ -5435,13 +5430,13 @@ LIMIT 1;";
             $membershipParams['membership_type_id'],
             $primaryContributionID
           );
-          // @todo remove all this stuff in favour of letting the api call further down handle in
-          // (it is a duplication of what the api does).
-          $dates = array_fill_keys(array(
-            'join_date',
-            'start_date',
-            'end_date',
-          ), NULL);
+
+          // Does the contact have a "current" membership (ie. not expired/pending etc).
+          $currentMembership = CRM_Member_BAO_Membership::getContactMembership($membershipParams['contact_id'],
+            $membershipParams['membership_type_id'],
+            $membershipParams['is_test'],
+            $membershipParams['id']
+          );
           if ($currentMembership) {
             /*
              * Fixed FOR CRM-4433
@@ -5449,29 +5444,11 @@ LIMIT 1;";
              * when Contribution mode is notify and membership is for renewal )
              */
             CRM_Member_BAO_Membership::fixMembershipStatusBeforeRenew($currentMembership, $changeDate);
-
-            // @todo - we should pass membership_type_id instead of null here but not
-            // adding as not sure of testing
-            $dates = CRM_Member_BAO_MembershipType::getRenewalDatesForMembershipType($membershipParams['id'],
-              $changeDate, NULL, $membershipParams['num_terms']
-            );
-            $dates['join_date'] = $currentMembership['join_date'];
           }
 
-          //get the status for membership.
-          $calcStatus = CRM_Member_BAO_MembershipStatus::getMembershipStatusByDate($dates['start_date'],
-            $dates['end_date'],
-            $dates['join_date'],
-            'today',
-            TRUE,
-            $membershipParams['membership_type_id'],
-            $membershipParams
-          );
-
-          unset($dates['end_date']);
-          $membershipParams['status_id'] = CRM_Utils_Array::value('id', $calcStatus, 'New');
-          //we might be renewing membership,
-          //so make status override false.
+          // Tell the Membership BAO to calculate membership status.
+          $params['skipStatusCal'] = 0;
+          $params['exclude_is_admin'] = TRUE;
           $membershipParams['is_override'] = FALSE;
         }
         //CRM-17723 - reset static $relatedContactIds array()

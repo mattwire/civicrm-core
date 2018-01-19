@@ -134,7 +134,7 @@ class CRM_Member_BAO_Membership extends CRM_Member_DAO_Membership {
       $membershipLog['modified_id'] = $membership->contact_id;
     }
 
-    CRM_Member_BAO_MembershipLog::add($membershipLog, CRM_Core_DAO::$_nullArray);
+    CRM_Member_BAO_MembershipLog::add($membershipLog);
 
     // reset the group contact cache since smart groups might be affected due to this
     CRM_Contact_BAO_GroupContactCache::opportunisticCacheFlush();
@@ -1165,10 +1165,8 @@ AND civicrm_membership.is_test = %2";
       $currentMembership
     );
 
-    if (empty($status) ||
-      empty($status['id'])
-    ) {
-      CRM_Core_Error::fatal(ts('Oops, it looks like there is no valid membership status corresponding to the membership start and end dates for this membership. Contact the site administrator for assistance.'));
+    if (empty($status) || empty($status['id'])) {
+      throw new CRM_Core_Exception(ts('Oops, it looks like there is no valid membership status corresponding to the membership start and end dates for this membership. Contact the site administrator for assistance.'));
     }
 
     $currentMembership['today_date'] = $today;
@@ -1234,7 +1232,7 @@ AND civicrm_membership.is_test = %2";
         )
       );
 
-      CRM_Member_BAO_MembershipLog::add($logParams, CRM_Core_DAO::$_nullArray);
+      CRM_Member_BAO_MembershipLog::add($logParams);
     }
   }
 
