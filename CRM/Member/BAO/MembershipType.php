@@ -530,22 +530,13 @@ class CRM_Member_BAO_MembershipType extends CRM_Member_DAO_MembershipType {
       // CRM=7297 Membership Upsell: we need to handle null end_date in case we are switching
       // from a lifetime to a different membership type
       if (is_null($membershipDetails->end_date)) {
-        $date = date('Y-m-d');
+        $endDateTime = new DateTime();
       }
       else {
-        $date = $membershipDetails->end_date;
+        $endDateTime = new DateTime($membershipDetails->end_date);
       }
-      $date = explode('-', $date);
-      $logStartDate = date('Y-m-d', mktime(0, 0, 0,
-        (double) $date[1],
-        (double) ($date[2] + 1),
-        (double) $date[0]
-      ));
-
-      $date = explode('-', $logStartDate);
-      $year = $date[0];
-      $month = $date[1];
-      $day = $date[2];
+      $logStartDateTime = clone $endDateTime;
+      $logStartDateTime->modify('+ 1 day');
 
       switch ($membershipTypeDetails['duration_unit']) {
         case 'year':
@@ -553,36 +544,33 @@ class CRM_Member_BAO_MembershipType extends CRM_Member_DAO_MembershipType {
           if ($membershipTypeDetails['period_type'] == 'fixed' && $oldPeriodType == 'rolling') {
             $month = substr($membershipTypeDetails['fixed_period_start_day'], 0, strlen($membershipTypeDetails['fixed_period_start_day']) - 2);
             $day = substr($membershipTypeDetails['fixed_period_start_day'], -2);
-            $year += 1;
+            $endDateTime->modify('+ 1 year');
+            $endDateTime->setDate($endDateTime->format('Y'), $month, $day);
           }
           else {
-            $year = $year + ($numRenewTerms * $membershipTypeDetails['duration_interval']);
+            $endDateTime->modify('+ ' . ($numRenewTerms * $membershipTypeDetails['duration_interval']) . ' year');
           }
           break;
 
         case 'month':
-          $month = $month + ($numRenewTerms * $membershipTypeDetails['duration_interval']);
+          $endDateTime->modify('+ ' . ($numRenewTerms * $membershipTypeDetails['duration_interval']) . ' month');
           break;
 
         case 'day':
-          $day = $day + ($numRenewTerms * $membershipTypeDetails['duration_interval']);
+          $endDateTime->modify('+ ' . ($numRenewTerms * $membershipTypeDetails['duration_interval']) . ' day');
           break;
       }
       if ($membershipTypeDetails['duration_unit'] == 'lifetime') {
         $endDate = NULL;
       }
       else {
-        $endDate = date('Y-m-d', mktime(0, 0, 0,
-          $month,
-          $day - 1,
-          $year
-        ));
+        $endDate = $endDateTime->format('Y-m-d');
       }
       $today = date('Y-m-d');
       $membershipDates['today'] = CRM_Utils_Date::customFormat($today, '%Y%m%d');
       $membershipDates['start_date'] = CRM_Utils_Date::customFormat($startDate, '%Y%m%d');
       $membershipDates['end_date'] = CRM_Utils_Date::customFormat($endDate, '%Y%m%d');
-      $membershipDates['log_start_date'] = CRM_Utils_Date::customFormat($logStartDate, '%Y%m%d');
+      $membershipDates['log_start_date'] = CRM_Utils_Date::customFormat($logStartDateTime->format('Y-m-d'), '%Y%m%d');
     }
     else {
       $today = date('Y-m-d');
