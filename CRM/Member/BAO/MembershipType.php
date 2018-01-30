@@ -326,28 +326,20 @@ class CRM_Member_BAO_MembershipType extends CRM_Member_DAO_MembershipType {
     if (!$joinDate) {
       $joinDate = date('Y-m-d');
     }
-    $actualStartDate = $joinDate;
-    if ($startDate) {
-      $actualStartDate = $startDate;
+    if (!$startDate) {
+      $startDate = $joinDate;
     }
+    $actualStartDateTime = new DateTime($startDate);
 
     $fixed_period_rollover = FALSE;
-    if (CRM_Utils_Array::value('period_type', $membershipTypeDetails) == 'rolling') {
-      if (!$startDate) {
-        $startDate = $joinDate;
-      }
-      $actualStartDate = $startDate;
-    }
-    elseif (CRM_Utils_Array::value('period_type', $membershipTypeDetails) == 'fixed') {
+    if (CRM_Utils_Array::value('period_type', $membershipTypeDetails) == 'fixed') {
       // calculate start date
-      // if !$startDate then use $joinDate
-      $toDay = explode('-', (empty($startDate) ? $joinDate : $startDate));
-      $year = $toDay[0];
-      $month = $toDay[1];
-      $day = $toDay[2];
+      $todayDateTime = new DateTime();
+      $year = $todayDateTime->format('Y');
+      $month = $todayDateTime->format('m');
+      $day = $todayDateTime->format('d');
 
       if ($membershipTypeDetails['duration_unit'] == 'year') {
-
         //get start fixed day
         $startMonth = substr($membershipTypeDetails['fixed_period_start_day'], 0,
           strlen($membershipTypeDetails['fixed_period_start_day']) - 2
@@ -370,8 +362,7 @@ class CRM_Member_BAO_MembershipType extends CRM_Member_DAO_MembershipType {
       elseif ($membershipTypeDetails['duration_unit'] == 'month') {
         // Check if we are on or after rollover day of the month - CRM-10585
         // If so, set fixed_period_rollover TRUE so we increment end_date month below.
-        $dateParts = explode('-', $actualStartDate);
-        if ($dateParts[2] >= $membershipTypeDetails['fixed_period_rollover_day']) {
+        if ($actualStartDateTime->format('d') >= $membershipTypeDetails['fixed_period_rollover_day']) {
           $fixed_period_rollover = TRUE;
         }
 
@@ -380,39 +371,36 @@ class CRM_Member_BAO_MembershipType extends CRM_Member_DAO_MembershipType {
           $actualStartDate = $startDate = $year . '-' . $month . '-01';
         }
       }
+      $actualStartDateTime->modify($actualStartDate);
     }
 
     // Calculate end date if it is not passed by user.
     if (!$endDate) {
       //end date calculation
-      $date = explode('-', $actualStartDate);
-      $year = $date[0];
-      $month = $date[1];
-      $day = $date[2];
+      $endDateTime = clone $actualStartDateTime;
 
       switch ($membershipTypeDetails['duration_unit']) {
         case 'year':
-          $year = $year + ($numRenewTerms * $membershipTypeDetails['duration_interval']);
+          $endDateTime->modify('+ ' . ($numRenewTerms * $membershipTypeDetails['duration_interval']) . ' year');
           //extend membership date by duration interval.
           if ($fixed_period_rollover) {
-            $year += 1;
+            $endDateTime->modify('+ 1 year');
           }
           break;
 
         case 'month':
-          $month = $month + ($numRenewTerms * $membershipTypeDetails['duration_interval']);
+          $endDateTime->modify('+ ' . ($numRenewTerms * $membershipTypeDetails['duration_interval']) . ' month');
           //duration interval is month
           if ($fixed_period_rollover) {
             //CRM-10585
-            $month += 1;
+            $endDateTime->modify('+ 1 month');
           }
           break;
 
         case 'day':
-          $day = $day + ($numRenewTerms * $membershipTypeDetails['duration_interval']);
-
+          $endDateTime->modify('+ ' . ($numRenewTerms * $membershipTypeDetails['duration_interval']) . ' day');
           if ($fixed_period_rollover) {
-            //Fix Me: Currently we don't allow rollover if
+            //FixMe: Currently we don't allow rollover if
             //duration interval is day
           }
           break;
@@ -422,7 +410,8 @@ class CRM_Member_BAO_MembershipType extends CRM_Member_DAO_MembershipType {
         $endDate = NULL;
       }
       else {
-        $endDate = date('Y-m-d', mktime(0, 0, 0, $month, $day - 1, $year));
+        $endDateTime->modify('- 1 day');
+        $endDate = $endDateTime->format('Y-m-d');
       }
     }
 
