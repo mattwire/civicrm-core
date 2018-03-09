@@ -54,6 +54,13 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form_MembershipConfig {
     $url = CRM_Utils_System::url('civicrm/admin/member/membershipType', 'reset=1');
     $session->pushUserContext($url);
 
+    // when custom data is included in this page
+    if (!empty($_POST['hidden_custom'])) {
+      CRM_Custom_Form_CustomData::preProcess($this, NULL, NULL, 1, 'MembershipType', $this->_id);
+      CRM_Custom_Form_CustomData::buildQuickForm($this);
+      CRM_Custom_Form_CustomData::setDefaultValues($this);
+    }
+
     $this->setPageTitle(ts('Membership Type'));
   }
 
@@ -196,6 +203,10 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form_MembershipConfig {
         $memberRel->freeze();
       }
     }
+
+    // Add custom data
+    $this->assign('customDataType', 'MembershipType');
+    $this->assign('entityID', $this->_id);
 
     $this->assign('membershipRecordsExists', $membershipRecords);
 
@@ -399,7 +410,11 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form_MembershipConfig {
 
       if ($this->_action & CRM_Core_Action::UPDATE) {
         $ids['membershipType'] = $this->_id;
+        $params['id'] = $this->_id;
       }
+
+      // Handle custom data
+      $params['custom'] = CRM_Core_BAO_CustomField::postProcess($submitted, $this->_id, 'MembershipType');
 
       $membershipType = CRM_Member_BAO_MembershipType::add($params, $ids);
 
