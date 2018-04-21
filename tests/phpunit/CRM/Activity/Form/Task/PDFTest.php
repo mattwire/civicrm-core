@@ -150,4 +150,48 @@ Unknown token:
     $this->fail('should be unreachable');
   }
 
+  public function testCreateDocumentSpecialTokens() {
+    $activity = $this->activityCreate();
+    $data = [
+      ["Source First Name: {activity.source_first_name}", "Source First Name: Anthony"],
+      ["Source Display Name: {activity.source_display_name}", "Source Display Name: Mr. Anthony Anderson II"],
+      ["Target N First Name: {activity.target_N_first_name}", "Target N First Name: Julia"],
+      ["Target N Display Name: {activity.target_N_display_name}", "Target N Display Name: Mr. Julia Anderson II"],
+      ["Target 0 First Name: {activity.target_0_first_name}", "Target 0 First Name: Julia"],
+      ["Target 1 First Name: {activity.target_1_first_name}", "Target 1 First Name: Julia"],
+      ["Target 2 First Name: {activity.target_2_first_name}", "Target 2 First Name: "],
+      ["Target N Contact ID: {activity.target_N_id}", "Target N Contact ID: {$activity['target_contact_id']}"],
+      ["Assignee N First Name: {activity.assignee_N_first_name}", "Assignee N First Name: Julia"],
+      ["Assignee N Display Name: {activity.assignee_N_display_name}", "Assignee N Display Name: Mr. Julia Anderson II"],
+      ["Assignee 0 First Name: {activity.assignee_0_first_name}", "Assignee 0 First Name: Julia"],
+      ["Assignee 1 First Name: {activity.assignee_1_first_name}", "Assignee 1 First Name: Julia"],
+      ["Assignee 2 First Name: {activity.assignee_2_first_name}", "Assignee 2 First Name: "],
+      ["Assignee N Contact ID: {activity.assignee_N_id}", "Assignee N Contact ID: {$activity['assignee_contact_id']}"],
+      ["Assignee Count: {activity.assignees_count}", "Assignee Count: 1"],
+      ["Target Count: {activity.targets_count}", "Target Count: 1"],
+      ["Assignee Count: {activity.assignee_count}", "Assignee Count: 1"],
+      ["Target Count: {activity.target_count}", "Target Count: 1"],
+    ];
+    $html_message = implode("\n", CRM_Utils_Array::collect('0', $data)) . "\n";
+
+    $tp = new TokenProcessor(\Civi::dispatcher(), [
+      'controller' => get_class(),
+      'smarty' => FALSE,
+      'schema' => ['activityId'],
+    ]);
+    $tp->addMessage('body_html', $html_message, 'text/html');
+    $tp->addRow()->context('activityId', $activity['id']);
+    $tp->evaluate();
+
+    $html = [];
+    foreach ($tp->getRows() as $row) {
+      $html[] = $row->render('body_html');
+    }
+    $output = implode(CRM_Utils_String::LINEFEED, $html);
+
+    foreach ($data as $line) {
+      $this->assertStringContainsString($line[1], $output);
+    }
+  }
+
 }
