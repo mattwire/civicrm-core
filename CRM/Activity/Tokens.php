@@ -49,6 +49,58 @@ class CRM_Activity_Tokens extends CRM_Core_EntityTokens {
   }
 
   /**
+   * @inheritDoc
+   */
+  public function prefetch(TokenValueEvent $e): ?array {
+    $entityIDs = $e->getTokenProcessor()->getContextValues($this->getEntityIDField());
+    if (empty($entityIDs)) {
+      return [];
+    }
+    $prefetch = parent::prefetch($e);
+
+    // Get data for special tokens
+    $activityContacts = $contacts = [];
+    // See if we need activity contacts
+    $needContacts = FALSE;
+    foreach ($this->activeTokens as $token) {
+      if (preg_match('/^source|target|assignee/', $token)) {
+        $needContacts = TRUE;
+        break;
+      }
+    }
+
+    // If we need ActivityContacts, load them
+    if ($needContacts) {
+      $activityContactsResult = \Civi\Api4\ActivityContact::get(FALSE)
+        ->addWhere('activity_id', 'IN', $entityIDs)
+        ->execute();
+      $contactIds = [];
+      $types = ['1' => 'assignee', '2' => 'source', '3' => 'target'];
+      foreach ($activityContactsResult as $ac) {
+        if ($ac['record_type_id'] == 2) {
+          $activityContacts[$ac['activity_id']][$types[$ac['record_type_id']]] = $ac['contact_id'];
+        }
+        else {
+          $activityContacts[$ac['activity_id']][$types[$ac['record_type_id']]][] = $ac['contact_id'];
+        }
+        $contactIds[$ac['contact_id']] = 1;
+      }
+      // @TODO only return the wanted fields
+      // maybe use CRM_Contact_Tokens::prefetch() ?
+      $contacts = \Civi\Api4\Contact::get(FALSE)
+        ->addSelect('*', 'email_primary.email', 'phone_primary.phone')
+        ->addWhere('id', 'IN', array_keys($contactIds))
+        ->execute()
+        ->indexBy('id');
+    }
+
+    $prefetch['activityContact'] = $activityContacts;
+    $prefetch['contact'] = $contacts;
+
+    return $prefetch;
+  }
+
+  /**
    * Evaluate the content of a single token.
    *
    * @param \Civi\Token\TokenRow $row
@@ -70,9 +122,138 @@ class CRM_Activity_Tokens extends CRM_Core_EntityTokens {
       parent::evaluateToken($row, $entity, $realField, $prefetch);
       $row->format('text/plain')->tokens($entity, $field, $row->tokens['activity'][$realField]);
     }
+    elseif ($field === 'case_id') {
+      // An activity can be linked to multiple cases so case_id is always an array.
+      // We just return the first case ID for the token.
+      // this weird hack might exist because apiv3 is weird &
+      $caseID = CRM_Core_DAO::singleValueQuery('SELECT case_id FROM civicrm_case_activity WHERE activity_id = %1 LIMIT 1', [1 => [$activityId, 'Integer']]);
+      $row->tokens($entity, $field, $caseID ?? '');
+    }
+    elseif (preg_match('/^(target|assignee)_count/', $field, $match)) {
+      $row->tokens($entity, $field, count($prefetch['activityContact'][$activityId][$match[1]] ?? []));
+    }
+    elseif (preg_match('/^(target|assignee|source)_/', $field, $match)) {
+      if ($match[1] == 'source') {
+        // There is only one source_contact for an activity
+        [$activityContactType, $contactFieldName] = explode('_', $field, 2);
+        $contactId = $prefetch['activityContact'][$activityId][$activityContactType] ?? NULL;
+      }
+      else {
+        // There can be multiple assignee/target contacts
+        // Can be used eg. {activity.target_N_display_name} to retrieve the "first" target contact display_name.
+        // Or the N can be replaced with a number between 1 and count of assignees/targets to return a specific contact
+        //   (but note that the order of assignee/target contacts is not guaranteed)
+        [$activityContactType, $activityContactIndex, $contactFieldName] = explode('_', $field, 3);
+        $contactIds = $prefetch['activityContact'][$activityId][$activityContactType] ?? NULL;
+        $selectedId = (int) $activityContactIndex > 0 ? $activityContactIndex - 1 : 0;
+        $contactId = $contactIds[$selectedId] ?? NULL;
+      }
+      $contact = $prefetch['contact'][$contactId] ?? NULL;
+      if (!$contact) {
+        $row->tokens($entity, $field, '');
+      }
+      else {
+        // This is OK for simple tokens, but would be better for this to be handled by
+        // CRM_Contact_Tokens ... but that doesn't exist yet.
+        if (array_key_exists($contactFieldName, $contact)) {
+          $row->tokens($entity, $field, $contact[$contactFieldName]);
+        }
+        else {
+          \Civi::log()->warning('CRM_Activity_Tokens: Contact token "' . $contactFieldName . '" not found. Token: ' . $field);
+        }
+      }
+    }
     else {
       parent::evaluateToken($row, $entity, $field, $prefetch);
     }
+  }
+
+  /**
+   * Get tokens that are special or calculated for this entity.
+   *
+   * @return array|array[]
+   */
+  protected function getBespokeTokens(): array {
+    $tokens = [];
+    if (CRM_Core_Component::isEnabled('CiviCase')) {
+      $tokens['case_id'] = [
+        'title' => ts('Activity Case ID'),
+        'name' => 'case_id',
+        'type' => 'calculated',
+        'options' => NULL,
+        'data_type' => 'Integer',
+        'audience' => 'user',
+      ];
+    }
+
+    $tokenProcessor = new \Civi\Token\TokenProcessor(Civi::dispatcher(), ['schema' => ['contactId']]);
+    $allTokens = $tokenProcessor->listTokens();
+    foreach (array_keys($allTokens) as $token) {
+      if (strpos($token, '{domain.') === 0) {
+        unset($allTokens[$token]);
+      }
+    }
+    $contactTokens = $allTokens;
+
+    foreach ($contactTokens as $label => $name) {
+      $match = [];
+      if (preg_match('/{contact\.(.*)}/', $label, $match)) {
+        $tokens['source_' . $match[1]] = [
+          'title' => ts('%1 (Added By)', [1 => $name]),
+          'name' => 'source_' . $match[1],
+          'type' => 'calculated',
+          'data_type' => 'String',
+          'audience' => 'user',
+        ];
+        $tokens['target_N_' . $match[1]] = [
+          'title' => ts('%1 (With Contact N)', [1 => $name]),
+          'name' => 'target_N_' . $match[1],
+          'type' => 'calculated',
+          'data_type' => 'String',
+          'audience' => 'user',
+        ];
+        $tokens['assignee_N_' . $match[1]] = [
+          'title' => ts('%1 (Assignee N)', [1 => $name]),
+          'name' => 'assignee_N_' . $match[1],
+          'type' => 'calculated',
+          'data_type' => 'String',
+          'audience' => 'user',
+        ];
+        $tokens['target_count'] = [
+          'title' => ts('Target Count'),
+          'name' => 'target_count',
+          'type' => 'calculated',
+          'data_type' => 'Integer',
+          'audience' => 'user',
+        ];
+        $tokens['assignee_count'] = [
+          'title' => ts('Assignee Count'),
+          'name' => 'assignee_count',
+          'type' => 'calculated',
+          'data_type' => 'Integer',
+          'audience' => 'user',
+        ];
+        for ($count = 0; $count<10; $count++) {
+          $tokens["target_{$count}_" . $match[1]] = [
+            'title' => ts('%1 (With Contact %2)', [1 => $name, 2 => $count]),
+            'name' => "target_{$count}_" . $match[1],
+            'type' => 'calculated',
+            'data_type' => 'String',
+            'audience' => 'sysadmin',
+          ];
+          $tokens["assignee_{$count}_" . $match[1]] = [
+            'title' => ts('%1 (Assignee %2)', [1 => $name, 2 => $count]),
+            'name' => "assignee_{$count}_" . $match[1],
+            'type' => 'calculated',
+            'data_type' => 'String',
+            'audience' => 'sysadmin',
+          ];
+        }
+
+      }
+    }
+
+    return $tokens;
   }
 
   /**
