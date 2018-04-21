@@ -70,7 +70,6 @@ class CRM_Activity_Form_Task_PDFLetterCommonTest extends CiviUnitTestCase {
   }
 
   public function testCreateDocumentSpecialTokens() {
-    $this->markTestIncomplete('special tokens not yet merged - see https://github.com/civicrm/civicrm-core/pull/12012');
     $activity = $this->activityCreate();
     $data = [
       ["Source First Name: {activity.source_first_name}", "Source First Name: Anthony"],
@@ -82,8 +81,8 @@ class CRM_Activity_Form_Task_PDFLetterCommonTest extends CiviUnitTestCase {
       ["Assignee 0 First Name: {activity.target_0_first_name}", "Assignee 0 First Name: Julia"],
       ["Assignee 1 First Name: {activity.target_1_first_name}", "Assignee 1 First Name: Julia"],
       ["Assignee 2 First Name: {activity.target_2_first_name}", "Assignee 2 First Name: "],
-      ["Assignee Count: {activity.assignees_count}", "Assignee Count: 1"],
-      ["Target Count: {activity.targets_count}", "Target Count: 1"],
+      ["Assignee Count: {activity.assignee_count}", "Assignee Count: 1"],
+      ["Target Count: {activity.target_count}", "Target Count: 1"],
     ];
     $html_message = "\n" . implode("\n", CRM_Utils_Array::collect('0', $data)) . "\n";
     $output = CRM_Activity_Form_Task_PDFLetterCommon::createDocument([$activity['id']], $html_message, ['is_unit_test' => TRUE]);

@@ -330,14 +330,12 @@ class CRM_Core_Form_Task_PDFLetterCommon {
   /**
    * Render html from rows
    *
-   * @param $rows
-   * @param string $msgPart
-   *   The name registered with the TokenProcessor
-   * @param array $formValues
-   *   The values submitted through the form
+   * @param  array $rows   Array of \Civi\Token\TokenRow
+   * @param  string $msgPart The name registered with the TokenProcessor
+   * @param  string $formValues The values submitted through the form
    *
-   * @return array
-   *   If formValues['is_unit_test'] is true, otherwise outputs document to browser
+   * @return string|void
+   *   $html if formValues['is_unit_test'] is true, otherwise outputs document to browser
    */
   public static function renderFromRows($rows, $msgPart, $formValues) {
     $html = [];
@@ -346,7 +344,8 @@ class CRM_Core_Form_Task_PDFLetterCommon {
     }
 
     if (!empty($formValues['is_unit_test'])) {
-      return $html;
+      // @fixme check if this is the correct separator
+      return implode(CRM_Utils_String::LINEFEED, $html);
     }
 
     if (!empty($html)) {

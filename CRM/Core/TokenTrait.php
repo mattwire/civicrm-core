@@ -7,6 +7,7 @@ trait CRM_Core_TokenTrait {
 
   private $basicTokens;
   private $customFieldTokens;
+  private $specialTokens;
 
   /**
    * CRM_Entity_Tokens constructor.
@@ -14,7 +15,8 @@ trait CRM_Core_TokenTrait {
   public function __construct() {
     parent::__construct($this->getEntityName(), array_merge(
       $this->getBasicTokens(),
-      $this->getCustomFieldTokens()
+      $this->getCustomFieldTokens(),
+      $this->getSpecialTokens()
     ));
   }
 
@@ -89,6 +91,13 @@ trait CRM_Core_TokenTrait {
       $this->customFieldTokens = \CRM_Utils_Token::getCustomFieldTokens(ucfirst($this->getEntityName()));
     }
     return $this->customFieldTokens;
+  }
+
+  /**
+   * @return array
+   */
+  protected function getSpecialTokens() {
+    return $this->specialTokens ?? [];
   }
 
 }
