@@ -127,7 +127,6 @@ class CRM_Member_BAO_MembershipType extends CRM_Member_DAO_MembershipType {
     // action is taken depending upon the mode
     $membershipType = new CRM_Member_DAO_MembershipType();
     $membershipType->copyValues($params);
-    $membershipType->find(TRUE);
     $membershipType->save();
 
     if ($membershipTypeId) {
@@ -141,9 +140,7 @@ class CRM_Member_BAO_MembershipType extends CRM_Member_DAO_MembershipType {
       self::updateAllPriceFieldValue($membershipTypeId, $params);
     }
 
-    if (!empty($params['custom']) &&
-      is_array($params['custom'])
-    ) {
+    if (!empty($params['custom']) && is_array($params['custom'])) {
       CRM_Core_BAO_CustomValueTable::store($params['custom'], 'civicrm_membership_type', $membershipType->id);
     }
 
