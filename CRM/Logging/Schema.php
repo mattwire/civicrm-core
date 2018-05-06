@@ -396,6 +396,9 @@ AND    (TABLE_NAME LIKE 'log_civicrm_%' $nonStandardTableNameString )
       if (!empty($cols[$alterType])) {
         foreach ($cols[$alterType] as $col) {
           $line = $this->_getColumnQuery($col, $create);
+          if ($alterType === 'ADD' && CRM_Core_DAO::checkFieldExists("log_$table", $col)) {
+            $alterType = 'MODIFY';
+          }
           CRM_Core_DAO::executeQuery("ALTER TABLE `{$this->db}`.log_$table {$alterType} {$line}", array(), TRUE, NULL, FALSE, FALSE);
         }
       }

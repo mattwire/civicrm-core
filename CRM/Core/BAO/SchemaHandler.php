@@ -306,14 +306,16 @@ ALTER TABLE {$tableName}
 
     switch ($params['operation']) {
       case 'add':
-        $separator = "\n";
-        $prefix = "ADD ";
-        $sql .= self::buildFieldSQL($params, $separator, "ADD COLUMN ");
-        $separator = ",\n";
-        $sql .= self::buildPrimaryKeySQL($params, $separator, "ADD PRIMARY KEY ");
-        $sql .= self::buildSearchIndexSQL($params, $separator, "ADD INDEX ");
-        $sql .= self::buildForeignKeySQL($params, $separator, "ADD ", $params['table_name']);
-        break;
+        if (!CRM_Core_DAO::checkFieldExists($params['table_name'], $params['name'])) {
+          $separator = "\n";
+          $prefix = "ADD ";
+          $sql .= self::buildFieldSQL($params, $separator, "ADD COLUMN ");
+          $separator = ",\n";
+          $sql .= self::buildPrimaryKeySQL($params, $separator, "ADD PRIMARY KEY ");
+          $sql .= self::buildSearchIndexSQL($params, $separator, "ADD INDEX ");
+          $sql .= self::buildForeignKeySQL($params, $separator, "ADD ", $params['table_name']);
+          break;
+        }
 
       case 'modify':
         $separator = "\n";
