@@ -38,6 +38,104 @@
  */
 class CRM_Member_Form_MembershipType extends CRM_Member_Form_MembershipConfig {
 
+  use CRM_Core_Form_EntityFormTrait;
+
+  /**
+   * Fields for the entity to be assigned to the template.
+   *
+   * Fields may have keys
+   *  - name (required to show in tpl from the array)
+   *  - description (optional, will appear below the field)
+   *  - required (Is this field required or not?)
+   *  - not-auto-addable - this class will not attempt to add the field using addField.
+   *    (this will be automatically set if the field does not have html in it's metadata
+   *    or is not a core field on the form's entity).
+   *  - help (option) add help to the field - e.g ['id' => 'id-source', 'file' => 'CRM/Contact/Form/Contact']]
+   *  - template - use a field specific template to render this field
+   * @var array
+   */
+  protected $entityFields = [];
+
+  /**
+   * Set entity fields to be assigned to the form.
+   */
+  protected function setEntityFields() {
+    $this->entityFields = [
+      'name' => [
+        'name' => 'name',
+        'required' => TRUE,
+        //'description' => ts("'e.g. 'Student', 'Senior', 'Honor Society'..."),
+      ],
+      'description' => [
+        'name' => 'description',
+        //'description' => ts('Description of this membership type for internal use. May include eligibility, benefits, terms, etc.')
+      ],
+      'member_of_contact_id' => [
+        'name' => 'member_of_contact_id',
+        'not-auto-addable' => TRUE,
+        //'description' => ts("Members assigned this membership type belong to which organization (e.g. this is for membership in \'Save the Whales - Northwest Chapter\'). NOTE: This organization/group/chapter must exist as a CiviCRM Organization type contact."),
+      ],
+      'minimum_fee' => [
+        'name' => 'minimum_fee',
+        //'description' => ts('Minimum fee required for this membership type. For free/complimentary memberships - set minimum fee to zero (0). NOTE: When using CiviCRM to process sales taxes this should be the tax exclusive amount.'),
+        'formatter' => 'crmMoney',
+      ],
+      'financial_type_id' => [
+        'name' => 'financial_type_id',
+        'not-auto-addable' => TRUE,
+        //'description' => ts("Select the financial type assigned to fees for this membership type (for example 'Membership Fees'). This is required for all membership types - including free or complimentary memberships."),
+      ],
+      'auto_renew' => ['name' => 'auto_renew', 'not-auto-addable' => TRUE],
+      'duration_interval' => [
+        'name' => 'duration_interval',
+      ],
+      'duration_unit' => [
+        'name' => 'duration_unit',
+        'required' => TRUE,
+        //'description' => ts("Duration of this membership (e.g. 30 days, 2 months, 5 years, 1 lifetime)"),
+      ],
+      'period_type' => [
+        'name' => 'period_type',
+        'required' => TRUE,
+        //'description' => ts("Select 'rolling' if membership periods begin at date of signup. Select 'fixed' if membership periods begin on a set calendar date."),
+        'help' => ['id' => "period-type", 'file' => "CRM/Member/Page/MembershipType.hlp"],
+      ],
+      'fixed_period_start_day' => [
+        'name' => 'fixed_period_start_day',
+        //'description' => ts('Month and day on which a <strong>fixed</strong> period membership or subscription begins. Example: A fixed period membership with Start Day set to Jan 01 means that membership periods would be 1/1/06 - 12/31/06 for anyone signing up during 2006.'),
+      ],
+      'fixed_period_rollover_day' => [
+        'name' => 'fixed_period_rollover_day',
+        //'description' => ts("Membership signups on or after this date cover the following calendar year as well. Example: If the rollover day is November 30, membership period for signups during December will cover the following year.")
+      ],
+      /**'month_fixed_period_rollover_day' => [
+        'name' => 'month_fixed_period_rollover_day',
+        'description' => ts("Membership signups on or after this day of the month cover the rest of the month plus the specified number of months.")
+      ],*/
+      'relationship_type_id' => [
+        'name' => 'relationship_type_id',
+        //'description' => ts("Memberships can be automatically granted to related contacts by selecting a Relationship Type."),
+        'help' => ['id' => 'rel-type', 'file' => "CRM/Member/Page/MembershipType.hlp"],
+      ],
+      'max_related' => [
+        'name' => 'max_related',
+        //'description' => ts("Maximum number of related memberships (leave blank for unlimited).")
+      ],
+      'visibility' => [
+        'name' => 'visibility',
+        //'description' => ts("Is this membership type available for self-service signups ('Public') or assigned by CiviCRM 'staff' users only ('Admin')"),
+      ],
+      'weight' => ['name' => 'weight'],
+      'is_active' => ['name' => 'is_active'],
+    ];
+  }
+
+  /**
+   * Deletion message to be assigned to the form.
+   *
+   * @var string
+   */
+  protected $deleteMessage;
 
   /**
    * Explicitly declare the entity api name.
@@ -47,10 +145,12 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form_MembershipConfig {
   }
 
   /**
-   * Explicitly declare the form context.
+   * Set the delete message.
+   *
+   * We do this from the constructor in order to do a translation.
    */
-  public function getDefaultContext() {
-    return 'create';
+  public function setDeleteMessage() {
+    $this->deleteMessage = ts('WARNING: Deleting this option will result in the loss of all membership records of this type.') . ts('This may mean the loss of a substantial amount of data, and the action cannot be undone.') . ts('Do you want to continue?');
   }
 
   /**
@@ -127,21 +227,11 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form_MembershipConfig {
    * @throws \CiviCRM_API3_Exception
    */
   public function buildQuickForm() {
-    parent::buildQuickForm();
+    self::buildQuickEntityForm();
 
     if ($this->_action & CRM_Core_Action::DELETE) {
       return;
     }
-
-    $this->applyFilter('__ALL__', 'trim');
-    $this->addField('name', [], TRUE);
-    $this->addField('description');
-    $this->addField('minimum_fee');
-    $this->addField('duration_unit', [], TRUE);
-    $this->addField('period_type', [], TRUE);
-    $this->addField('is_active');
-    $this->addField('weight');
-    $this->addField('max_related');
 
     $this->addRule('name', ts('A membership type with this name already exists. Please select another name.'),
       'objectExists', array('CRM_Member_DAO_MembershipType', $this->_id)

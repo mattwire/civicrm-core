@@ -75,6 +75,9 @@
     <required>true</required>
     <comment>Owner organization for this membership type. FK to Contact ID</comment>
     <add>1.5</add>
+    <html>
+      <type>Select</type>
+    </html>
   </field>
   <foreignKey>
     <name>member_of_contact_id</name>
@@ -110,6 +113,9 @@
     </pseudoconstant>
     <comment>If membership is paid by a contribution - what financial type should be used. FK to civicrm_financial_type.id</comment>
     <add>4.3</add>
+    <html>
+      <type>Select</type>
+    </html>
   </field>
   <foreignKey>
     <name>financial_type_id</name>

@@ -24,6 +24,8 @@
  +--------------------------------------------------------------------+
 *}
 {* this template is used for adding/editing/deleting membership type  *}
+{include file="CRM/Core/Form/EntityForm.tpl"}
+
 <div class="crm-block crm-form-block crm-membership-type-form-block">
 
   <div class="form-item" id="membership_type_form">
