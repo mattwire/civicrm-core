@@ -5488,6 +5488,8 @@ LIMIT 1;";
         $var = TRUE;
         CRM_Member_BAO_Membership::createRelatedMemberships($var, $var, TRUE);
         civicrm_api3('Membership', 'create', $membershipParams);
+        // Add Membership Renewal activity
+        CRM_Activity_BAO_Activity::addActivity($membership, 'Membership Renewal', $membership->contact_id);
       }
     }
   }
