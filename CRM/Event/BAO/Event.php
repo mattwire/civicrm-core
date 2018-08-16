@@ -2063,30 +2063,93 @@ WHERE  ce.loc_block_id = $locBlockId";
    * @param int $eventId
    * @param int $type
    *
-   * @return string
-   *   the permission that the user has (or null)
+   * @return bool|array
+   *   Whether the user has permission for this event (or if eventId=NULL an array of permissions)
+   * @throws \CiviCRM_API3_Exception
    */
   public static function checkPermission($eventId = NULL, $type = CRM_Core_Permission::VIEW) {
+    if (empty($eventId)) {
+      return self::getAllPermissions($type);
+    }
+
+    if (!isset(Civi::$statics[__CLASS__]['permission'][$eventId])) {
+      Civi::$statics[__CLASS__]['permission'][$eventId] = FALSE;
+
+      $params = array(
+        'id' => $eventId,
+        'check_permissions' => 1,
+        'return' => 'id, created_id',
+      );
+
+      $allEvents = [];
+      $createdEvents = [];
+      $contactId = CRM_Core_Session::getLoggedInContactID();
+      $eventResult = civicrm_api3('Event', 'get', $params);
+      if ($eventResult['count'] > 0) {
+        foreach ($eventResult['values'] as $eventId => $eventDetail) {
+          $allEvents[$eventId] = $eventId;
+          if (isset($eventDetails['created_id']) && $contactId == $eventDetail['created_id']) {
+            $createdEvents[$eventId] = $eventId;
+          }
+        }
+      }
+
+      // Note: for a multisite setup, a user with edit all events, can edit all events
+      // including those from other sites
+      if (($type == CRM_Core_Permission::EDIT) && CRM_Core_Permission::check('edit all events')) {
+        Civi::$statics[__CLASS__]['permission'][$eventId] = TRUE;
+      }
+      elseif (in_array($eventId, CRM_ACL_API::group(CRM_Core_Permission::EDIT, $contactId, 'civicrm_event', $allEvents, $createdEvents))) {
+          Civi::$statics[__CLASS__]['permission'][$eventId] = TRUE;
+      }
+      elseif (CRM_Core_Permission::check('access CiviEvent') && CRM_Core_Permission::check('view event participants')) {
+        // use case: allow "view all events" but NOT "edit all events"
+        // so for a normal site allow users with these two permissions to view all events AND
+        // at the same time also allow any hook to override if needed.
+        if (in_array($eventId, CRM_ACL_API::group(CRM_Core_Permission::VIEW, $contactId, 'civicrm_event', $allEvents, array_keys($allEvents)))) {
+          Civi::$statics[__CLASS__]['permission'][$eventId] = TRUE;
+        }
+      }
+      elseif (($type == CRM_Core_Permission::DELETE) && CRM_Core_Permission::check('delete in CiviEvent')) {
+        Civi::$statics[__CLASS__]['permission'][$eventId] = TRUE;
+      }
+
+    }
+    return Civi::$statics[__CLASS__]['permission'][$eventId];
+  }
+
+  /**
+   * Make sure that the user has permission to access this event.
+   *
+   * @param int $type
+   *    Type of CRM_Core_Permission
+   *
+   * @return array
+   *   Array of events with permissions (array_keys=permissions)
+   * @throws \CiviCRM_API3_Exception
+   */
+  public static function getAllPermissions($type = CRM_Core_Permission::VIEW) {
     if (!isset(Civi::$statics[__CLASS__]['permissions'])) {
       $params = array(
         'check_permissions' => 1,
-        'return' => 'title',
+        'return' => 'id, created_id',
         'options' => array(
           'limit' => 0,
         ),
       );
 
-      if ($eventId) {
-        $params['id'] = $eventId;
+      $allEvents = [];
+      $createdEvents = [];
+      $eventResult = civicrm_api3('Event', 'get', $params);
+      if ($eventResult['count'] > 0) {
+        $contactId = CRM_Core_Session::getLoggedInContactID();
+        foreach ($eventResult['values'] as $eventId => $eventDetail) {
+          $allEvents[$eventId] = $eventId;
+          if (isset($eventDetails['created_id']) && $contactId == $eventDetail['created_id']) {
+            $createdEvents[$eventId] = $eventId;
+          }
+        }
       }
-
-      $result = civicrm_api3('Event', 'get', $params);
-      $allEvents = CRM_Utils_Array::collect('title', $result['values']);
-
-      // Search again, but only events created by the user.
-      $params['created_id'] = 'user_contact_id';
-      $result = civicrm_api3('Event', 'get', $params);
-      $createdEvents = array_keys($result['values']);
 
       // Note: for a multisite setup, a user with edit all events, can edit all events
       // including those from other sites
@@ -2121,10 +2184,6 @@ WHERE  ce.loc_block_id = $locBlockId";
           Civi::$statics[__CLASS__]['permissions'][CRM_Core_Permission::VIEW]
         );
       }
-    }
-
-    if ($eventId) {
-      return in_array($eventId, Civi::$statics[__CLASS__]['permissions'][$type]) ? TRUE : FALSE;
     }
 
     return Civi::$statics[__CLASS__]['permissions'];
