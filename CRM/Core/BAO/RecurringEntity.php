@@ -226,10 +226,10 @@ class CRM_Core_BAO_RecurringEntity extends CRM_Core_DAO_RecurringEntity {
    *
    * @return array
    */
-  public function generate() {
+  public function generate($newParams = []) {
     $this->generateRecursiveDates();
 
-    return $this->generateEntities();
+    return $this->generateEntities($newParams);
   }
 
   /**
@@ -263,7 +263,7 @@ class CRM_Core_BAO_RecurringEntity extends CRM_Core_DAO_RecurringEntity {
    *
    * @return array
    */
-  public function generateEntities() {
+  public function generateEntities($newParams = []) {
     self::setStatus(self::RUNNING);
 
     $newEntities = array();
@@ -285,6 +285,9 @@ class CRM_Core_BAO_RecurringEntity extends CRM_Core_DAO_RecurringEntity {
       $count = 0;
       foreach ($this->recursionDates as $key => $dateCols) {
         $newCriteria = $dateCols;
+        if (isset($newParams[$this->entity_table])) {
+          $newCriteria = array_merge($dateCols, $newParams[$this->entity_table]);
+        }
         foreach ($this->overwriteColumns as $col => $val) {
           $newCriteria[$col] = $val;
         }
@@ -343,10 +346,16 @@ class CRM_Core_BAO_RecurringEntity extends CRM_Core_DAO_RecurringEntity {
         $exRangeEnd = $this->excludeDateRangeColumns[1];
       }
 
-      $count = 1;
+      if ($this->dontSkipStartDate) {
+        $count = 0;
+        $this->recursion->count($initialCount+1);
+      }
+      else {
+        $count = 1;
+      }
       while ($result = $this->recursion->next()) {
         $skip = FALSE;
-        if ($result == $this->recursion_start_date) {
+        if ((!$this->dontSkipStartDate) && $result == $this->recursion_start_date) {
           // skip the recursion-start-date from the list we going to generate
           $skip = TRUE;
         }

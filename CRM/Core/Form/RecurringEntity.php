@@ -483,7 +483,13 @@ class CRM_Core_Form_RecurringEntity {
           $recursion->linkedEntities = $linkedEntities;
         }
 
-        $recursion->generate();
+        if (!empty($params['dont_skip_start_date'])) {
+          $recursion->dontSkipStartDate = TRUE;
+        }
+        if (empty($params['new_params'])) {
+          $params['new_params'] = [];
+        }
+        $recursion->generate($params['new_params']);
 
         $status = ts('Repeat Configuration has been saved');
         CRM_Core_Session::setStatus($status, ts('Saved'), 'success');

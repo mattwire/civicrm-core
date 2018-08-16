@@ -74,6 +74,9 @@
         <td class="label">{$form.exclude_date_list.label} {help id="id-exclude-date" entityType=$recurringEntityType file="CRM/Core/Form/RecurringEntity.hlp"}</td>
         <td>{$form.exclude_date_list.html}</td>
       </tr>
+      {if $dontSkipStartDate}
+        {$form.dont_skip_start_date.html}
+      {/if}
     </table>
     {if !$recurringFormIsEmbedded}
       <div class="crm-submit-buttons">
