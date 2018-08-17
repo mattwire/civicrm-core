@@ -349,10 +349,10 @@ class CRM_Core_BAO_UFGroup extends CRM_Core_DAO_UFGroup {
       $field = CRM_Core_DAO::executeQuery($query);
 
       $importableFields = self::getProfileFieldMetadata($showAll);
-      list($customFields, $addressCustomFields) = self::getCustomFields($ctype);
+      list($customFields, $locationCustomFields) = self::getCustomFields($ctype);
 
       while ($field->fetch()) {
-        list($name, $formattedField) = self::formatUFField($group, $field, $customFields, $addressCustomFields, $importableFields, $permissionType);
+        list($name, $formattedField) = self::formatUFField($group, $field, $customFields, $locationCustomFields, $importableFields, $permissionType);
         if ($formattedField !== NULL) {
           $fields[$name] = $formattedField;
         }
@@ -433,7 +433,7 @@ class CRM_Core_BAO_UFGroup extends CRM_Core_DAO_UFGroup {
    * @param CRM_Core_DAO_UFGroup|CRM_Core_DAO $group
    * @param CRM_Core_DAO_UFField|CRM_Core_DAO $field
    * @param array $customFields
-   * @param array $addressCustomFields
+   * @param array $locationCustomFields
    * @param array $importableFields
    * @param int $permissionType
    *   Eg CRM_Core_Permission::CREATE.
@@ -443,21 +443,21 @@ class CRM_Core_BAO_UFGroup extends CRM_Core_DAO_UFGroup {
     $group,
     $field,
     $customFields,
-    $addressCustomFields,
+    $locationCustomFields,
     $importableFields,
     $permissionType = CRM_Core_Permission::CREATE
   ) {
     $name = $field->field_name;
     $title = $field->label;
 
-    $addressCustom = FALSE;
+    $locationCustom = FALSE;
     if (in_array($permissionType, array(
         CRM_Core_Permission::CREATE,
         CRM_Core_Permission::EDIT,
       )) &&
-      in_array($field->field_name, array_keys($addressCustomFields))
+      in_array($field->field_name, array_keys($locationCustomFields))
     ) {
-      $addressCustom = TRUE;
+      $locationCustom = TRUE;
       $name = "address_{$name}";
     }
     if ($field->field_name == 'url') {
@@ -468,7 +468,7 @@ class CRM_Core_BAO_UFGroup extends CRM_Core_DAO_UFGroup {
     }
     else {
       $locationFields = self::getLocationFields();
-      if (in_array($field->field_name, $locationFields) || $addressCustom) {
+      if (in_array($field->field_name, $locationFields) || $locationCustom) {
         $name .= '-Primary';
       }
     }
@@ -744,9 +744,17 @@ class CRM_Core_BAO_UFGroup extends CRM_Core_DAO_UFGroup {
       foreach ($components as $value) {
         $customFields = array_merge($customFields, CRM_Core_BAO_CustomField::getFieldsForImport($value));
       }
-      $addressCustomFields = CRM_Core_BAO_CustomField::getFieldsForImport('Address');
-      $customFields = array_merge($customFields, $addressCustomFields);
-      $customFieldCache[$ctype] = array($customFields, $addressCustomFields);
+
+      $locationCustomFields = [];
+      $locationFieldTypes = ['Address', 'Phone', 'Email', 'IM', 'OpenID'];
+      foreach ($locationFieldTypes as $locationFieldType) {
+        $locationCustomFields = array_merge($locationCustomFields,
+          CRM_Core_BAO_CustomField::getFieldsForImport($locationFieldType)
+        );
+      }
+
+      $customFields = array_merge($customFields, $locationCustomFields);
+      $customFieldCache[$ctype] = array($customFields, $locationCustomFields);
     }
     return $customFieldCache[$ctype];
   }
@@ -994,10 +1002,9 @@ class CRM_Core_BAO_UFGroup extends CRM_Core_DAO_UFGroup {
     $details = $query->searchQuery(0, 0, NULL, FALSE, FALSE,
       FALSE, FALSE, FALSE, $additionalWhereClause);
     if (!$details->fetch()) {
-      return;
+      return NULL;
     }
     $query->convertToPseudoNames($details);
-    $config = CRM_Core_Config::singleton();
 
     $locationTypes = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id');
     $imProviders = CRM_Core_PseudoConstant::get('CRM_Core_DAO_IM', 'provider_id');

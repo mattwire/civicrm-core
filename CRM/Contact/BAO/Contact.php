@@ -1338,21 +1338,24 @@ WHERE     civicrm_contact.id = " . CRM_Utils_Type::escape($id, 'Integer');
         $fields = array_merge($fields, CRM_Core_OptionValue::getFields('', $contactType));
       }
 
-      $locationFields = array_merge(CRM_Core_DAO_Address::import(),
-        CRM_Core_DAO_Phone::import(),
-        CRM_Core_DAO_Email::import(),
-        CRM_Core_DAO_IM::import(TRUE),
-        CRM_Core_DAO_OpenID::import()
-      );
-
-      $locationFields = array_merge($locationFields,
-        CRM_Core_BAO_CustomField::getFieldsForImport('Address',
-          FALSE,
-          FALSE,
-          FALSE,
-          FALSE
-        )
-      );
+      $locationFields = [];
+      $locationFieldTypes = ['Address', 'Phone', 'Email', 'IM', 'OpenID'];
+      foreach ($locationFieldTypes as $locationFieldType) {
+        $daoClass = "CRM_Core_DAO_$locationFieldType";
+        $prefix = FALSE;
+        if ($locationFieldType == 'IM') {
+          $prefix = TRUE;
+        }
+        $locationFields = array_merge($locationFields, $daoClass::import($prefix));
+        $locationFields = array_merge($locationFields,
+          CRM_Core_BAO_CustomField::getFieldsForImport($locationFieldType,
+            FALSE,
+            FALSE,
+            FALSE,
+            FALSE
+          )
+        );
+      }
 
       foreach ($locationFields as $key => $field) {
         $locationFields[$key]['hasLocationType'] = TRUE;
