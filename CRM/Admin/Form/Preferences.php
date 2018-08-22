@@ -165,7 +165,8 @@ class CRM_Admin_Form_Preferences extends CRM_Core_Form {
             case 'checkbox':
               $this->add($fieldValue['html_type'],
                 $fieldName,
-                $fieldValue['title']
+                $fieldValue['title'],
+                CRM_Utils_Array::value('html_attributes', $fieldValue)
               );
               break;
 
@@ -196,8 +197,9 @@ class CRM_Admin_Form_Preferences extends CRM_Core_Form {
               $this->addElement('select',
                 $fieldName,
                 $fieldValue['title'],
-                $fieldValue['option_values'],
-                CRM_Utils_Array::value('attributes', $fieldValue)
+                // TODO: Load via pseudoconstant if defined
+                CRM_Utils_Array::value('option_values', $fieldValue),
+                CRM_Utils_Array::value('attributes', $fieldValue, CRM_Utils_Array::value('html_attributes', $fieldValue))
               );
               break;
 

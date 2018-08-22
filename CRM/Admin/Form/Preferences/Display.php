@@ -39,81 +39,29 @@ class CRM_Admin_Form_Preferences_Display extends CRM_Admin_Form_Preferences {
     CRM_Utils_System::setTitle(ts('Settings - Display Preferences'));
     $optionValues = CRM_Activity_BAO_Activity::buildOptions('activity_type_id');
 
-    $this->_varNames = array(
-      CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME => array(
-        'contact_view_options' => array(
-          'html_type' => 'checkboxes',
-          'title' => ts('Viewing Contacts'),
-          'weight' => 1,
-        ),
-        'contact_smart_group_display' => array(
-          'html_type' => 'radio',
-          'title' => ts('Viewing Smart Groups'),
-          'weight' => 2,
-        ),
-        'contact_edit_options' => array(
-          'html_type' => 'checkboxes',
-          'title' => ts('Editing Contacts'),
-          'weight' => 3,
-        ),
-        'advanced_search_options' => array(
-          'html_type' => 'checkboxes',
-          'title' => ts('Contact Search'),
-          'weight' => 4,
-        ),
-        'activity_assignee_notification' => array(
-          'html_type' => 'checkbox',
-          'title' => ts('Notify Activity Assignees'),
-          'weight' => 5,
-        ),
-        'activity_assignee_notification_ics' => array(
-          'html_type' => 'checkbox',
-          'title' => ts('Include ICal Invite to Activity Assignees'),
-          'weight' => 6,
-        ),
-        'preserve_activity_tab_filter' => array(
-          'html_type' => 'checkbox',
-          'title' => ts('Preserve activity filters as a user preference'),
-          'weight' => 7,
-        ),
-        'contact_ajax_check_similar' => array(
-          'title' => ts('Check for Similar Contacts'),
-          'weight' => 8,
-          'html_type' => NULL,
-        ),
-        'user_dashboard_options' => array(
-          'html_type' => 'checkboxes',
-          'title' => ts('Contact Dashboard'),
-          'weight' => 9,
-        ),
-        'display_name_format' => array(
-          'html_type' => 'textarea',
-          'title' => ts('Individual Display Name Format'),
-          'weight' => 10,
-        ),
-        'sort_name_format' => array(
-          'html_type' => 'textarea',
-          'title' => ts('Individual Sort Name Format'),
-          'weight' => 11,
-        ),
-        'editor_id' => array(
-          'html_type' => NULL,
-          'weight' => 12,
-        ),
-        'ajaxPopupsEnabled' => array(
-          'html_type' => 'checkbox',
-          'title' => ts('Enable Popup Forms'),
-          'weight' => 13,
-        ),
-        'do_not_notify_assignees_for' => array(
-          'html_type' => 'select',
-          'option_values' => $optionValues,
-          'attributes' => array('multiple' => 1, "class" => "huge crm-select2"),
-          'title' => ts('Do not notify assignees for'),
-          'weight' => 14,
-        ),
-      ),
-    );
+    $settings = civicrm_api3('Setting', 'getfields', [
+      'filters' => ['group' => 'core'],
+    ]);
+    $settings = CRM_Utils_Array::value('values', $settings, []);
+
+    foreach ($settings as $settingKey => $settingValues) {
+      if (empty($settingValues['weight'])) {
+        // Weight is not used for display preferences form
+        $settingValues['weight'] = 1;
+      }
+      switch ($settingKey) {
+        case 'contact_ajax_check_similar':
+          // This is overridden in the template
+          $settingValues['html_type'] = NULL;
+          break;
+
+        case 'do_not_notify_assignees_for':
+          // TODO: Replace with pseudoconstant handling
+          $settingValues['option_values'] = $optionValues;
+          break;
+      }
+      $this->_varNames[$settingValues['group_name']][$settingKey] = $settingValues;
+    }
 
     parent::preProcess();
   }

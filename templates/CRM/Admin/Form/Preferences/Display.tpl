@@ -33,15 +33,7 @@
     </tr>
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
-      <td class="description">
-        {capture assign=crmURL}{crmURL p='civicrm/admin/setting/component' q='action=add&reset=1'}{/capture}
-        {ts 1=$crmURL}Select the <strong>tabs</strong>
-          that should be displayed when viewing a contact record. EXAMPLE: If your organization does not keep track of
-          'Relationships', then un-check this option to simplify the screen display. Tabs for Contributions, Pledges,
-          Memberships, Events, Grants and Cases are also hidden if the corresponding component is not enabled. Go to
-          <a href="%1">Administer > System Settings > Enable Components</a>
-          to modify the components which are available for your site.{/ts}
-      </td>
+      <td class="description">{$fields.contact_view_options.description}</td>
     </tr>
     <tr class="crm-preferences-display-form-block-contact_smart_group_display">
       <td class="label">{$form.contact_smart_group_display.label}</td>
@@ -50,7 +42,7 @@
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
       <td class="description">
-        {ts}Controls display of the smart groups that a contact is part of in each contact's "Groups" tab. "Show on Demand" provides the best performance, and is recommended for most sites.{/ts}
+        {$fields.contact_smart_group_display.description}
       </td>
     </tr>
     <tr class="crm-preferences-display-form-block-contact_edit_options">
@@ -100,7 +92,7 @@
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
       <td class="description">
-        {ts}Select the sections that should be included when adding or editing a contact record. EXAMPLE: If your organization does not record Gender and Birth Date for individuals, then simplify the form by un-checking this option. Drag interface allows you to change the order of the panes displayed on contact add/edit screen.{/ts}
+        {$fields.contact_edit_options.description}
       </td>
     </tr>
     <tr class="crm-preferences-display-form-block-advanced_search_options">
@@ -110,7 +102,7 @@
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
       <td class="description">
-        {ts}Select the sections that should be included in the Basic and Advanced Search forms. EXAMPLE: If you don't track Relationships - then you do not need this section included in the advanced search form. Simplify the form by un-checking this option.{/ts}
+        {$fields.advanced_search_options.description}
       </td>
     </tr>
     <tr class="crm-preferences-display-form-block-contact_ajax_check_similar">
@@ -119,19 +111,15 @@
     </tr>
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
-      {capture assign=dedupeRules}href="{crmURL p='civicrm/contact/deduperules' q='reset=1'}"{/capture}
-      <td class="description">{ts 1=$dedupeRules}When enabled, checks for possible matches on the "New Contact" form using the Supervised <a %1>matching rule specified in your system</a>.{/ts}
-      </td>
+      <td class="description">{$fields.contact_ajax_check_similar.description}</td>
     </tr>
     <tr class="crm-preferences-display-form-block-activity_assignee_notification">
-      <td class="label"></td>
-      <td>{$form.activity_assignee_notification.html} {$form.activity_assignee_notification.label}</td>
+      <td class="label">{$form.activity_assignee_notification.label}</td>
+      <td>{$form.activity_assignee_notification.html}</td>
     </tr>
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
-      <td class="description">
-        {ts}When enabled, contacts who are assigned activities will automatically receive an email notification with a copy of the activity.{/ts}
-      </td>
+      <td class="description">{$fields.activity_assignee_notification.description}</td>
     </tr>
     <tr class="crm-preferences-display-form-activity_types">
       <td class="label">{$form.do_not_notify_assignees_for.label}</td>
@@ -139,28 +127,24 @@
     </tr>
     <tr class="crm-preferences-display-form-activity_types">
       <td>&nbsp;</td>
-      <td class="description">
-        {ts}These activity types will be excluded from automated email notifications to assignees.{/ts}
-      </td>
+      <td class="description">{$fields.do_not_notify_assignees_for.description}</td>
     </tr>
     <tr class="crm-preferences-display-form-block-activity_assignee_notification_ics">
-      <td class="label"></td>
-      <td>{$form.activity_assignee_notification_ics.html} {$form.activity_assignee_notification_ics.label}</td>
+      <td class="label">{$form.activity_assignee_notification_ics.label}</td>
+      <td>{$form.activity_assignee_notification_ics.html}</td>
     </tr>
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
-      <td class="description">{ts}When enabled, the assignee notification sent out above will also include an ical meeting invite.{/ts}
-      </td>
+      <td class="description">{$fields.activity_assignee_notification_ics.description}</td>
     </tr>
 
     <tr class="crm-preferences-display-form-block-preserve_activity_tab_filter">
-      <td class="label"></td>
-      <td>{$form.preserve_activity_tab_filter.html} {$form.preserve_activity_tab_filter.label}</td>
+      <td class="label">{$form.preserve_activity_tab_filter.label}</td>
+      <td>{$form.preserve_activity_tab_filter.html}</td>
     </tr>
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
-      <td class="description">{ts}When enabled, any filter settings a user selects on the contact's Activity tab will be remembered as they visit other contacts.{/ts}
-      </td>
+      <td class="description">{$fields.preserve_activity_tab_filter.description}</td>
     </tr>
 
     <tr class="crm-preferences-display-form-block-user_dashboard_options">
@@ -169,9 +153,7 @@
     </tr>
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
-      <td class="description">
-        {ts}Select the sections that should be included in the Contact Dashboard. EXAMPLE: If you don't want constituents to view their own contribution history, un-check that option.{/ts}
-      </td>
+      <td class="description">{$fields.user_dashboard_options.description}</td>
     </tr>
     <tr class="crm-preferences-display-form-block-editor_id">
       <td class="label">{$form.editor_id.label} {help id="editor_id"}</td>
@@ -190,9 +172,7 @@
     </tr>
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
-      <td class="description">
-        {ts}If you disable this option, the CiviCRM interface will be limited to traditional browsing. Opening a form will refresh the page rather than opening a popup dialog.{/ts}
-      </td>
+      <td class="description">{$fields.ajaxPopupsEnabled.description}</td>
     </tr>
     <tr class="crm-preferences-display-form-block-display_name_format">
       <td class="label">{$form.display_name_format.label}</td>
@@ -200,7 +180,7 @@
     </tr>
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
-      <td class="description">{ts}Display name format for individual contact display names.{/ts}</td>
+      <td class="description">{$fields.display_name_format.description}</td>
     </tr>
     <tr class="crm-preferences-display-form-block-sort_name_format">
       <td class="label">{$form.sort_name_format.label}</td>
@@ -208,7 +188,7 @@
     </tr>
     <tr class="crm-preferences-display-form-block-description">
       <td>&nbsp;</td>
-      <td class="description">{ts}Sort name format for individual contact display names.{/ts}</td>
+      <td class="description">{$fields.sort_name_format.description}</td>
     </tr>
   </table>
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
