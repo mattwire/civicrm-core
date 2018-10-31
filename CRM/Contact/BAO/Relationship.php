@@ -954,6 +954,10 @@ WHERE  relationship_type_id = " . CRM_Utils_Type::escape($type, 'Integer');
       $queryString .= " AND id !=" . CRM_Utils_Type::escape($relationshipId, 'Integer');
     }
 
+    if (isset($params['is_active'])) {
+      $queryString .= " AND is_active = " . CRM_Utils_Type::escape($params['is_active'], 'Boolean');
+    }
+
     $relationship = new CRM_Contact_BAO_Relationship();
     $relationship->query($queryString);
     while ($relationship->fetch()) {
