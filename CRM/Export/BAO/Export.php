@@ -703,7 +703,7 @@ CREATE TABLE {$exportTempTable} (
     }
 
     $sql .= "
-) ENGINE=InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci
+) ENGINE=MyISAM DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 ";
 
     CRM_Core_DAO::executeQuery($sql);
@@ -1010,7 +1010,7 @@ WHERE  id IN ( $deleteIDString )
     $mappingFields = array(
       'civicrm_primary_id' => 'id',
       'provider_id' => 'im_service_provider',
-      'phone_type_id' => 'phone_type',
+      //'phone_type_id' => 'phone_type',
     );
 
     //figure out which columns are to be replaced by which ones

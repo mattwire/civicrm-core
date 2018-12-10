@@ -512,6 +512,7 @@ class CRM_Export_BAO_ExportProcessor {
     $label = $this->getOutputSpecificationLabel($key, $relationshipType, $locationType, $entityLabel);
     $index = $this->getOutputSpecificationIndex($key, $relationshipType, $locationType, $entityLabel);
     $fieldKey = $this->getOutputSpecificationFieldKey($key, $relationshipType, $locationType, $entityLabel);
+    $fieldKey = $index;
 
     $this->outputSpecification[$index]['header'] = $label;
     $this->outputSpecification[$index]['sql_columns'] = $this->getSqlColumnDefinition($fieldKey, $key);
@@ -565,6 +566,9 @@ class CRM_Export_BAO_ExportProcessor {
     $headerRows = [];
     foreach ($this->outputSpecification as $key => $spec) {
       if (empty($spec['do_not_output_to_csv'])) {
+        if ($key == 'state_province_id') {
+          continue;
+        }
         $headerRows[] = $spec['header'];
       }
     }
@@ -672,7 +676,7 @@ class CRM_Export_BAO_ExportProcessor {
       if (!$this->isExportSpecifiedPaymentFields()) {
         $nullContributionDetails = array_fill_keys(array_keys($this->getPaymentHeaders()), NULL);
         if ($this->isExportPaymentFields()) {
-          $paymentData = CRM_Utils_Array::value($row[$paymentTableId], $paymentDetails);
+          $paymentData = CRM_Utils_Array::value($iterationDAO->$paymentTableId, $paymentDetails);
           if (!is_array($paymentData) || empty($paymentData)) {
             $paymentData = $nullContributionDetails;
           }
@@ -683,6 +687,7 @@ class CRM_Export_BAO_ExportProcessor {
         }
       }
     }
+
     //remove organization name for individuals if it is set for current employer
     if (!empty($row['contact_type']) &&
       $row['contact_type'] == 'Individual' && array_key_exists('organization_name', $row)
