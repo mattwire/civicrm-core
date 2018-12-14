@@ -22,8 +22,9 @@ class CRM_Core_Payment_Dummy extends CRM_Core_Payment {
 
   protected $_mode = NULL;
 
-  protected $_params = array();
-  protected $_doDirectPaymentResult = array();
+  protected $_params = [];
+  protected $_doDirectPaymentResult = [];
+  protected $_doCancelSubscriptionExpectedParams = [];
 
   /**
    * Set result from do Direct Payment for test purposes.
@@ -198,4 +199,25 @@ class CRM_Core_Payment_Dummy extends CRM_Core_Payment {
     return array('amount', 'next_sched_contribution_date');
   }
 
-}
+  /**
+   * Set result from do Direct Payment for test purposes.
+   *
+   * @param array $doDirectPaymentResult
+   *  Result to be returned from test.
+   */
+  public function setCancelSubscriptionExpectedParams($expected) {
+    $this->_doCancelSubscriptionExpectedParams = $expected;
+  }
+
+  public function cancelSubscription(&$message = '', $params = []) {
+    if (!empty($this->_doCancelSubscriptionExpectedParams)) {
+      foreach ($this->_doCancelSubscriptionExpectedParams as $key => $value) {
+        if (!isset($params[$key]) || $params[$key] != $value) {
+          return FALSE;
+        }
+      }
+    }
+    return TRUE;
+  }
+
+  }
