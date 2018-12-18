@@ -30,6 +30,22 @@
  */
 class CRM_Contact_Form_Relationship extends CRM_Core_Form {
 
+  use CRM_Core_Form_EntityFormTrait;
+
+  /**
+   * Fields for the entity to be assigned to the template.
+   *
+   * @var array
+   */
+  protected $entityFields = [];
+
+  /**
+   * Deletion message to be assigned to the form.
+   *
+   * @var string
+   */
+  protected $deleteMessage;
+
   /**
    * The relationship id, used when editing the relationship
    *
@@ -104,17 +120,27 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
   public $_caseId;
 
   /**
-   * Explicitly declare the form context.
-   */
-  public function getDefaultContext() {
-    return 'create';
-  }
-
-  /**
    * Explicitly declare the entity api name.
    */
   public function getDefaultEntity() {
     return 'Relationship';
+  }
+
+  /**
+   * Set the delete message.
+   *
+   * We do this from the constructor in order to do a translation.
+   */
+  public function setDeleteMessage() {
+    $this->deleteMessage = ts('Are you sure you want to delete this Relationship?.');
+  }
+
+  /**
+   * Set entity fields to be assigned to the form.
+   */
+  protected function setEntityFields() {
+    $this->entityFields = [
+    ];
   }
 
   public function preProcess() {
@@ -150,6 +176,10 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
     switch ($this->_action) {
       case CRM_Core_Action::VIEW:
         CRM_Utils_System::setTitle(ts('View Relationship for %1', array(1 => $this->_display_name_a)));
+        $relationshipDetails = civicrm_api3('Relationship', 'getsingle', ['id' => $this->_relationshipId]);
+        $relationshipDetails['cid'] = $this->_contactId;
+        $relationshipDetails['name'] = $this->_display_name_a;
+        $this->assign('viewRelationship', $relationshipDetails);
         break;
 
       case CRM_Core_Action::ADD:
@@ -185,11 +215,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
       $this->_rtype = str_replace($this->_relationshipTypeId . '_', '', $this->_rtypeId);
     }
 
-    //need to assign custom data type and subtype to the template - FIXME: explain why
-    $this->assign('customDataType', 'Relationship');
-    $this->assign('customDataSubType', $this->_relationshipTypeId);
-    $this->assign('entityID', $this->_relationshipId);
-
     //use name as it remain constant, CRM-3336
     $this->_allRelationshipNames = CRM_Core_PseudoConstant::relationshipType('name');
 
@@ -198,13 +223,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
       if ($this->_allRelationshipNames[$this->_relationshipTypeId]["name_a_b"] == 'Employee of') {
         $this->_isCurrentEmployer = $this->_values['contact_id_b'] == CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $this->_values['contact_id_a'], 'employer_id');
       }
-    }
-
-    // when custom data is included in this page
-    if (!empty($_POST['hidden_custom'])) {
-      CRM_Custom_Form_CustomData::preProcess($this, NULL, $this->_relationshipTypeId, 1, 'Relationship', $this->_relationshipId);
-      CRM_Custom_Form_CustomData::buildQuickForm($this);
-      CRM_Custom_Form_CustomData::setDefaultValues($this);
     }
   }
 
@@ -275,19 +293,11 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
    * Build the form object.
    */
   public function buildQuickForm() {
+    $this->_id = $this->_relationshipId;
+    $this->_entitySubTypeId = $this->_rtypeId;
+    self::buildQuickEntityForm();
+
     if ($this->_action & CRM_Core_Action::DELETE) {
-      $this->addButtons(array(
-          array(
-            'type' => 'next',
-            'name' => ts('Delete'),
-            'isDefault' => TRUE,
-          ),
-          array(
-            'type' => 'cancel',
-            'name' => ts('Cancel'),
-          ),
-        )
-      );
       return;
     }
 
@@ -340,29 +350,6 @@ class CRM_Contact_Form_Relationship extends CRM_Core_Form {
     $this->addField('description', array('label' => ts('Description')));
 
     CRM_Contact_Form_Edit_Notes::buildQuickForm($this);
-
-    if ($this->_action & CRM_Core_Action::VIEW) {
-      $this->addButtons(array(
-        array(
-          'type' => 'cancel',
-          'name' => ts('Done'),
-        ),
-      ));
-    }
-    else {
-      // make this form an upload since we don't know if the custom data injected dynamically is of type file etc.
-      $this->addButtons(array(
-        array(
-          'type' => 'upload',
-          'name' => ts('Save Relationship'),
-          'isDefault' => TRUE,
-        ),
-        array(
-          'type' => 'cancel',
-          'name' => ts('Cancel'),
-        ),
-      ));
-    }
   }
 
   /**

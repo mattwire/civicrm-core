@@ -24,6 +24,7 @@
  +--------------------------------------------------------------------+
 *}
 {* this template is used for adding/editing/viewing relationships  *}
+{include file="CRM/Core/Form/EntityForm.tpl"}
 
   {if $action eq 4 } {* action = view *}
     <div class="crm-block crm-content-block crm-relationship-view-block">
@@ -269,9 +270,4 @@
     </script>
   {/if}
 
-  {if $action eq 8}
-    <div class="status">
-      {ts}Are you sure you want to delete this Relationship?{/ts}
-    </div>
-  {/if}
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>

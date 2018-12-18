@@ -202,7 +202,7 @@ class CRM_Contact_Page_View_Relationship extends CRM_Core_Page {
     $this->_caseId = CRM_Utils_Request::retrieve('caseID', 'Integer', $this);
 
     if ($this->_action & CRM_Core_Action::VIEW) {
-      $this->view();
+      $this->edit();
     }
     elseif ($this->_action & (CRM_Core_Action::UPDATE | CRM_Core_Action::ADD | CRM_Core_Action::DELETE)) {
       $this->edit();
