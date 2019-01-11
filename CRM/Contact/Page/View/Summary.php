@@ -122,8 +122,10 @@ class CRM_Contact_Page_View_Summary extends CRM_Contact_Page_View {
       ->addScriptFile('civicrm', 'templates/CRM/common/TabHeader.js', 1, 'html-header')
       ->addSetting(array(
         'summaryPrint' => array('mode' => $this->_print),
-        'tabSettings' => array('active' => CRM_Utils_Request::retrieve('selectedChild', 'Alphanumeric', $this, FALSE, 'summary')),
+        'tabSettings' => ['active' => CRM_Utils_Request::retrieve('selectedChild', 'Alphanumeric', $this, FALSE, 'summary')],
+        'tabSettings2' => ['active' => CRM_Utils_Request::retrieve('selectedChild2', 'Alphanumeric', $this, FALSE, NULL)]
       ));
+
     $this->assign('summaryPrint', $this->_print);
     $session = CRM_Core_Session::singleton();
     $url = CRM_Utils_System::url('civicrm/contact/view', 'reset=1&cid=' . $this->_contactId);
@@ -385,9 +387,20 @@ class CRM_Contact_Page_View_Summary extends CRM_Contact_Page_View {
         }
         $u = $elem['url'];
 
+        // Append selectedChild to AJAX URL for tabs
+        $selectedChild = CRM_Utils_Request::retrieve('selectedChild', 'Alphanumeric', $this, FALSE, 'summary');
+        $selectedChild2 = CRM_Utils_Request::retrieve('selectedChild2', 'Alphanumeric', $this, FALSE);
+        $tabSelected = NULL;
+        if ($selectedChild) {
+          $tabSelected = "&selectedChild={$selectedChild}";
+        }
+        if ($selectedChild2) {
+          $tabSelected .= "&selectedChild2={$selectedChild2}";
+        }
+        $q = "reset=1&force=1&cid={$this->_contactId}{$tabSelected}";
+
         //appending isTest to url for test soft credit CRM-3891.
         //FIXME: hack ajax url.
-        $q = "reset=1&force=1&cid={$this->_contactId}";
         if (CRM_Utils_Request::retrieve('isTest', 'Positive', $this)) {
           $q .= "&isTest=1";
         }

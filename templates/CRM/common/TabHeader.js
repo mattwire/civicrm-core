@@ -6,7 +6,9 @@
  */
 CRM.$(function($) {
   var tabSettings = CRM.tabSettings || {};
+  var tabSettings2 = CRM.tabSettings2 || {};
   tabSettings.active = tabSettings.active ? $('#tab_' + tabSettings.active).prevAll().length : 0;
+  tabSettings2.active = tabSettings2.active ? $('#tab_' + tabSettings2.active).prevAll().length : 0;
   $("#mainTabContainer")
     .on('tabsbeforeactivate', function(e, ui) {
       // CRM-14353 - Warn of unsaved changes for all forms except those which have opted out
@@ -52,6 +54,7 @@ CRM.$(function($) {
       e.preventDefault();
     })
     .tabs(tabSettings);
+  $("#secondaryTabContainer").tabs(tabSettings2);
   // Any load/submit event could potentially call for tabs to refresh.
   $(document).on('crmLoad.tabInfo crmFormSuccess.tabInfo', function(e, data) {
     if (data && $.isPlainObject(data.updateTabs)) {
@@ -77,6 +80,7 @@ CRM.$(function($) {
    */
   CRM.tabHeader.focus = function(tab) {
     $('#mainTabContainer').tabs('option', 'active', $(tab).prevAll().length);
+    $('#secondaryTabContainer').tabs('option', 'active', $(tab).prevAll().length);
   };
 
   /**

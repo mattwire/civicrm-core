@@ -484,6 +484,12 @@ INNER JOIN civicrm_contribution       con ON ( con.id = mp.contribution_id )
       $context = CRM_Utils_Request::retrieve('context', 'Alphanumeric');
       if ($cid) {
         switch ($context) {
+          case 'contributionrecur':
+            $url = CRM_Utils_System::url('civicrm/contact/view',
+              "reset=1&selectedChild=contribute&selectedChild2=recurring&cid={$cid}"
+            );
+            break;
+
           case 'contribution':
             $url = CRM_Utils_System::url('civicrm/contact/view',
               "reset=1&selectedChild=contribute&cid={$cid}"

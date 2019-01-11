@@ -31,15 +31,18 @@
     <div class="contact-summary-contribute-tab view-content">
 
       <div id="secondaryTabContainer" class="ui-tabs ui-widget ui-widget-content ui-corner-all">
-        {include file="CRM/common/TabSelected.tpl" defaultTab="contributions" tabContainer="#secondaryTabContainer"}
+        {if !$selectedChild2}
+          {capture assign=selectedChild2}contributions{/capture}
+        {/if}
+        {include file="CRM/common/TabSelected.tpl" defaultTab=$selectedChild2 tabContainer="#secondaryTabContainer"}
 
         <ul class="ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header">
-          <li id="tab_contributions" class="crm-tab-button ui-corner-all ui-tabs-tab ui-corner-top ui-state-default ui-tab ui-tabs-active ui-state-active">
+          <li id="tab_contributions" class="crm-tab-button ui-corner-all ui-tabs-tab ui-corner-top ui-state-default ui-tab">
             <a href="#contributions-subtab" title="{ts}Contributions{/ts}">
               {ts}Contributions{/ts} <em>{$tabCount}</em>
             </a>
           </li>
-          <li id="tab_recurring" class="crm-tab-button ui-corner-all ui-tabs-tab ui-corner-top ui-state-default ui-tab">
+          <li id="tab_recurring" class="crm-tab-button ui-corner-all ui-tabs-tab ui-corner-top ui-tab">
             <a href="#recurring-subtab" title="{ts}Recurring Contributions{/ts}">
               {ts}Recurring Contributions{/ts} <em>{$contributionRecurCount}</em>
             </a>

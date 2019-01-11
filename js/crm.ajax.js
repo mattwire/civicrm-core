@@ -328,6 +328,7 @@
         });
     }
     $(settings.target).crmSnippet(settings).crmSnippet('refresh');
+    CRM.$('div.crm-form-block').closest('form').unblock();
     return $(settings.target);
   };
   CRM.loadForm = function(url, options) {

@@ -430,4 +430,35 @@ class CRM_Core_Page {
     $this->assign('fields', $dateFields);
   }
 
+  /**
+   * Retrieve the action and ID from the request.
+   *
+   * Action is assigned to the template while we're at it.  This is pulled from
+   * the `run()` method above.
+   *
+   * @return int
+   *   The ID if present, or 0.
+   * @throws \CRM_Core_Exception
+   */
+  protected function getIdAndAction() {
+    $this->_action = CRM_Utils_Request::retrieve('action', 'String', $this, FALSE, 'browse');
+    $this->assign('action', $this->_action);
+
+    $this->assign('selectedChild', CRM_Utils_Request::retrieve('selectedChild', 'Alphanumeric', $this));
+    $this->assign('selectedChild2', CRM_Utils_Request::retrieve('selectedChild2', 'Alphanumeric', $this));
+
+    // get 'id' if present
+    $id = CRM_Utils_Request::retrieve('id', 'Positive', $this, FALSE, 0);
+
+    require_once str_replace('_', DIRECTORY_SEPARATOR, $this->getBAOName()) . ".php";
+
+    if ($id) {
+      if (!$this->checkPermission($id, NULL)) {
+        CRM_Core_Error::fatal(ts('You do not have permission to make changes to the record'));
+      }
+    }
+
+    return $id;
+  }
+
 }
