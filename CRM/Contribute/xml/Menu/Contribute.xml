@@ -174,7 +174,7 @@
   <item>
     <path>civicrm/contact/view/contributionrecur</path>
     <title>Recurring Contributions</title>
-    <page_callback>CRM_Contribute_Page_ContributionRecur</page_callback>
+    <page_callback>CRM_Contribute_Form_ContributionRecurView</page_callback>
   </item>
   <item>
     <path>civicrm/contact/view/contribution/additionalinfo</path>

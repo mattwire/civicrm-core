@@ -978,4 +978,19 @@ INNER JOIN civicrm_contribution       con ON ( con.id = mp.contribution_id )
     return self::$inactiveStatuses;
   }
 
+  /**
+   * Fetch object based on array of properties.
+   *
+   * @param array $params
+   *   (reference) an assoc array of name/value pairs.
+   * @param array $defaults
+   *   (reference) an assoc array to hold the flattened values.
+   *
+   * @return Object CRM_Contribute_DAO_ContributionRecur
+   */
+  public static function retrieve(&$params, &$defaults) {
+    return CRM_Core_DAO::commonRetrieve('CRM_Contribute_DAO_ContributionRecur', $params, $defaults);
+  }
+
+
 }
