@@ -25,34 +25,58 @@
 *}
 
 <div class="crm-block crm-form-block crm-auto-renew-membership-cancellation">
-<div class="help">
-  <div class="icon inform-icon"></div>&nbsp;
-  {if $mode eq 'auto_renew'}
-      {ts}Click the button below if you want to cancel the auto-renewal option for your {$membershipType} membership. This will not cancel your membership. However you will need to arrange payment for renewal when your membership expires.{/ts}
-  {else}
-      <strong>{ts 1=$amount|crmMoney 2=$frequency_interval 3=$frequency_unit}Recurring Contribution Details: %1 every %2 %3{/ts}
-      {if $installments}
-        {ts 1=$installments}for %1 installments{/ts}.
-      {/if}</strong>
-      <div class="content">{ts}Click the button below to cancel this commitment and stop future transactions. This does not affect contributions which have already been completed.{/ts}</div>
+  <div class="help">
+    <div class="icon inform-icon"></div>&nbsp;
+    {if $mode eq 'auto_renew'}
+      {ts}One or more memberships are linked to this recurring contribution - this will NOT cancel the membership(s). However the membership(s) will no longer auto-renew.{/ts}
+      <br />
+    {/if}
+    {ts}Click the button below to cancel this commitment and stop future transactions. This does not affect contributions which have already been completed.{/ts}
+
+    {if !$cancelSupported}
+      <div class="status-warning">
+        {ts}Automatic cancellation is not supported for this payment processor. You or the contributor will need to manually cancel this recurring contribution using the payment processor website.{/ts}
+      </div>
+    {/if}
+  </div>
+  {if !$self_service}
+    <table class="form-layout">
+      <tr>
+        <td class="label"><label for="payment_processor">{ts}Details{/ts}</label></td>
+        <td>
+          <strong>{ts 1=$recur.amount|crmMoney:$recur.currency 2=$recur.frequency_interval 3=$recur.frequency_unit}%1 every %2 %3{/ts}
+            {if $recur.installments}
+              {ts 1=$recur.installments}for %1 installments{/ts}.
+            {/if}
+          </strong>
+        </td>
+      </tr>
+      <tr>
+        <td class="label"><label for="payment_processor">{ts}Payment Processor{/ts}</label></td>
+        <td>{$recur.payment_processor}</td>
+      </tr>
+      {if $recur.processor_id}
+        <tr>
+          <td class="label"><label for="payment_processor">{ts}Processor ID{/ts}</label></td>
+          <td>{$recur.processor_id}</td>
+        </tr>
+      {elseif $recur.trxn_id}
+        <tr>
+          <td class="label"><label for="payment_processor">{ts}Transaction ID{/ts}</label></td>
+          <td>{$recur.trxn_id}</td>
+        </tr>
+      {/if}
+      {if $cancelSupported}
+      <tr>
+        <td class="label">{$form.send_cancel_request.label}</td>
+        <td>{$form.send_cancel_request.html}</td>
+      </tr>
+      {/if}
+      <tr>
+        <td class="label">{$form.is_notify.label}</td>
+        <td>{$form.is_notify.html}</td>
+      </tr>
+    </table>
   {/if}
-  {if !$cancelSupported}
-    <div class="status-warning">
-      {ts}Automatic cancellation is not supported for this payment processor. You or the contributor will need to manually cancel this recurring contribution using the payment processor website.{/ts}
-    </div>
-  {/if}
-</div>
-{if !$self_service}
-<table class="form-layout">
-   <tr>
-      <td class="label">{$form.send_cancel_request.label}</td>
-      <td class="html-adjust">{$form.send_cancel_request.html}</td>
-   </tr>
-   <tr>
-      <td class="label">{$form.is_notify.label}</td>
-      <td class="html-adjust">{$form.is_notify.html}</td>
-   </tr>
-</table>
-{/if}
-<div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div>
+  <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div>
 </div>
