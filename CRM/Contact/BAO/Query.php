@@ -3038,7 +3038,7 @@ class CRM_Contact_BAO_Query {
         implode(',', (array) $regularGroupIDs),
         'CommaSeparatedIntegers'
       );
-      $gcTable = "`civicrm_group_contact-" . uniqid() . "`";
+      $gcTable = "`civicrm_group_contact-added`";
       $joinClause = array("contact_a.id = {$gcTable}.contact_id");
 
       if (strpos($op, 'IN') !== FALSE) {
@@ -4892,13 +4892,16 @@ civicrm_relationship.start_date > {$today}
     $query = $this->getSearchSQL($offset, $rowCount, $sort, $count, $includeContactIds, $sortByChar, $groupContacts, $additionalWhereClause, $sortOrder, $additionalFromClause, $skipOrderAndLimit);
 
     if ($returnQuery) {
+      \Civi::log()->debug('returnQuery: ' . $query);
       return $query;
     }
     if ($count) {
-      return CRM_Core_DAO::singleValueQuery($query);
+      //return CRM_Core_DAO::singleValueQuery($query);
+      return $this->singleValueQueryDebug($query);
     }
 
-    $dao = CRM_Core_DAO::executeQuery($query);
+    //$dao = CRM_Core_DAO::executeQuery($query);
+    $dao = $this->executeQueryDebug($query);
 
     // We can always call this - it will only re-enable if it was originally enabled.
     CRM_Core_DAO::reenableFullGroupByMode();
@@ -6794,6 +6797,22 @@ AND   displayRelType.is_active = 1
       $groupBy = " GROUP BY " . implode(', ', $groupByCols);
     }
     return $groupBy;
+  }
+
+  protected function executeQueryDebug($query) {
+    \Civi::log()->debug('execquery: ' . $query);
+    \Civi::log()->debug('execStart: ' . date('YmdHis'));
+    $dao = CRM_Core_DAO::executeQuery($query);
+    \Civi::log()->debug('execEnd: ' . date('YmdHis'));
+    return $dao;
+  }
+
+  protected function singleValueQueryDebug($query) {
+    \Civi::log()->debug('svalquery: ' . $query);
+    \Civi::log()->debug('svalStart: ' . date('YmdHis'));
+    $value = CRM_Core_DAO::singleValueQuery($query);
+    \Civi::log()->debug('svalEnd: ' . date('YmdHis'));
+    return $value;
   }
 
 }
