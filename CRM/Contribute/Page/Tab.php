@@ -79,12 +79,14 @@ class CRM_Contribute_Page_Tab extends CRM_Core_Page {
         CRM_Core_Action::UPDATE => array(
           'name' => ts('Edit'),
           'title' => ts('Edit Recurring Payment'),
+          'icon' => 'fa-pencil',
           'url' => 'civicrm/contribute/updaterecur',
           'qs' => "reset=1&action=update&crid=%%crid%%&cid=%%cid%%&context={$context}{$tabSelected}",
         ),
         CRM_Core_Action::DISABLE => array(
           'name' => ts('Cancel'),
           'title' => ts('Cancel'),
+          'icon' => 'fa-trash',
           'ref' => 'crm-enable-disable',
         ),
       );
@@ -98,16 +100,12 @@ class CRM_Contribute_Page_Tab extends CRM_Core_Page {
         unset($links[CRM_Core_Action::UPDATE]);
         return $links;
       }
-      if ($paymentProcessorObj->supports('cancelRecurring')) {
-        unset($links[CRM_Core_Action::DISABLE]['extra'], $links[CRM_Core_Action::DISABLE]['ref']);
-        $links[CRM_Core_Action::DISABLE]['url'] = "civicrm/contribute/unsubscribe";
-        $links[CRM_Core_Action::DISABLE]['qs'] = "reset=1&crid=%%crid%%&cid=%%cid%%&context={$context}";
-      }
-
       if ($paymentProcessorObj->supports('UpdateSubscriptionBillingInfo')) {
         $links[CRM_Core_Action::RENEW] = array(
           'name' => ts('Change Billing Details'),
           'title' => ts('Change Billing Details'),
+          'type' => 'next',
+          'icon' => 'fa-pencil',
           'url' => 'civicrm/contribute/updatebilling',
           'qs' => "reset=1&crid=%%crid%%&cid=%%cid%%&context={$context}{$tabSelected}",
         );
