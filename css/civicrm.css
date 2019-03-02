@@ -1866,7 +1866,6 @@ input.crm-form-entityref {
 .crm-container a.button:link,
 .crm-container a.button:visited,
 .crm-container input.crm-form-submit,
-.crm-container .ui-dialog-buttonset .ui-button,
 .crm-container input[type=button],
 .crm-container .crm-button {
   text-shadow: 0 1px 0 black;
@@ -1947,13 +1946,6 @@ input.crm-form-entityref {
 
 .crm-container .ui-dialog-buttonpane {
   background: linear-gradient(to bottom, #f2f2f2 0%,#ffffff 35%);
-}
-
-.crm-container .ui-dialog-buttonset .ui-button {
-  padding: 0;
-}
-.crm-container .ui-dialog-buttonset .ui-button .ui-icon {
-  background-image: url("../i/icons/jquery-ui-FFFFFF.png");
 }
 
 /* No crm-button styling for PayPal Express buttons */

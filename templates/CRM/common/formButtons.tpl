@@ -36,11 +36,20 @@
 
   {foreach from=$form.buttons item=button key=key name=btns}
     {if $key|substring:0:4 EQ '_qf_'}
-        {if $location}
-          {assign var='html' value=$form.buttons.$key.html|crmReplace:id:"$key-$location"}
-        {else}
-          {assign var='html' value=$form.buttons.$key.html}
-        {/if}
+      {if $location}
+        {assign var='html' value=$form.buttons.$key.html|crmReplace:id:"$key-$location"}
+      {else}
+        {assign var='html' value=$form.buttons.$key.html}
+      {/if}
+      {crmGetAttribute html=$html attr='type' assign='type'}
+      {crmGetAttribute html=$html attr='name' assign='name'}
+      {crmGetAttribute html=$html attr='value' assign='value'}
+      {crmGetAttribute html=$html attr='disabled' assign='disabled'}
+      {if $key|substr:-6 EQ 'cancel'}
+        {capture assign=class}cancel{/capture}
+        {capture assign=type}button{/capture}
+      {/if}
+      <button type="{$type}" name="{$name}" {$disabled} class="crm-button button {$class}">
         {crmGetAttribute html=$html attr='crm-icon' assign='icon'}
         {capture assign=iconPrefix}{$icon|truncate:3:"":true}{/capture}
         {if $icon && $iconPrefix eq 'fa-'}
@@ -50,11 +59,10 @@
           {assign var='buttonClass' value=' crm-icon-button'}
           {capture assign=iconDisp}<span class="crm-button-icon ui-icon-{$icon}"> </span>{/capture}
         {/if}
-        {crmGetAttribute html=$html attr='disabled' assign='disabled'}
-        <span class="crm-button crm-button-type-{$key|crmBtnType} crm-button{$key}{$buttonClass}{if $disabled} crm-button-disabled{/if}"{if $buttonStyle} style="{$buttonStyle}"{/if}>
           {$iconDisp}
-          {$html}
+          {$value}
         </span>
+      </button>
     {/if}
   {/foreach}
 {/crmRegion}
