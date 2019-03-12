@@ -909,20 +909,47 @@ GROUP BY civicrm_activity_id $having {$this->_orderBy}";
           $cid = $rows[$rowNum]['civicrm_contact_contact_source_id'];
         }
 
-        $actActionLinks = CRM_Activity_Selector_Activity::actionLinks($row['civicrm_activity_activity_type_id'],
-          CRM_Utils_Array::value('civicrm_activity_source_record_id', $rows[$rowNum]),
-          FALSE,
-          $rows[$rowNum]['civicrm_activity_id']
-        );
+        if (!empty($this->_params['include_case_activities_value'])) {
+          try {
+            $caseId = civicrm_api3('Activity', 'getvalue', [
+              'id' => $rows[$rowNum]['civicrm_activity_id'],
+              'return' => 'case_id'
+            ]);
+            if (is_array($caseId)) {
+              $caseId = CRM_Utils_Array::first($caseId);
+            }
+          } catch (CiviCRM_API3_Exception $e) {
+            // No case ID
+          }
+        }
+        if (empty($caseId)) {
+          $actActionLinks = CRM_Activity_Selector_Activity::actionLinks($row['civicrm_activity_activity_type_id'],
+            CRM_Utils_Array::value('civicrm_activity_source_record_id', $rows[$rowNum]),
+            FALSE,
+            $rows[$rowNum]['civicrm_activity_id']
+          );
 
-        $actLinkValues = [
-          'id' => $rows[$rowNum]['civicrm_activity_id'],
-          'cid' => $cid,
-          'cxt' => $context,
-        ];
-        $actUrl = CRM_Utils_System::url($actActionLinks[CRM_Core_Action::VIEW]['url'],
-          CRM_Core_Action::replace($actActionLinks[CRM_Core_Action::VIEW]['qs'], $actLinkValues), TRUE
-        );
+          $actLinkValues = [
+            'id' => $rows[$rowNum]['civicrm_activity_id'],
+            'cid' => $cid,
+            'cxt' => $context,
+          ];
+          $actUrl = CRM_Utils_System::url($actActionLinks[CRM_Core_Action::VIEW]['url'],
+            CRM_Core_Action::replace($actActionLinks[CRM_Core_Action::VIEW]['qs'], $actLinkValues), TRUE
+          );
+        }
+        else {
+          $caseActionLinks = CRM_Case_Selector_Search::actionLinks();
+          $caseLinkValues = [
+            'aid' => $rows[$rowNum]['civicrm_activity_id'],
+            'caseid' => $caseId,
+            'cid' => $cid,
+            'cxt' => $context,
+          ];
+          $actUrl = CRM_Utils_System::url($caseActionLinks[CRM_Core_Action::VIEW]['url'],
+            CRM_Core_Action::replace($caseActionLinks[CRM_Core_Action::VIEW]['qs'], $caseLinkValues), TRUE
+          );
+        }
       }
 
       if (array_key_exists('civicrm_contact_contact_source', $row)) {
