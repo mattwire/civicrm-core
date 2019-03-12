@@ -28,6 +28,13 @@
    by button and name. crmBtnType grabs type keyword from button name (e.g. 'upload', 'next', 'back', 'cancel') so
    types of buttons can be styled differently via css. *}
 {crmRegion name='form-buttons'}
+{if $linkButtons}
+  {foreach from=$linkButtons item=linkButton}
+    {capture assign=identifier}{if $linkButton.url}href="{crmURL p=$linkButton.url q=$linkButton.qs}"{else}href="#" name="{$linkButton.ref}"{/if}{/capture}
+    <a class="button" {$identifier} {if $linkButton.accessKey}accesskey="{$linkButton.accessKey}"{/if} {$linkButton.extra}><span><i class="crm-i {$linkButton.icon}"></i> {$linkButton.name}</span></a>
+  {/foreach}
+{/if}
+
 {foreach from=$form.buttons item=button key=key name=btns}
   {if $key|substring:0:4 EQ '_qf_'}
     {if $location}
