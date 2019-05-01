@@ -153,7 +153,7 @@ class CRM_Contribute_BAO_Contribution_Utils {
       if ($paymentParams['skipLineItem']) {
         // We are not processing the line item here because we are processing a membership.
         // Do not continue with contribution processing in this function.
-        return ['contribution' => $contribution];
+        return $contribution;
       }
 
       $paymentParams['contributionID'] = $contribution->id;
@@ -186,24 +186,17 @@ class CRM_Contribute_BAO_Contribution_Utils {
             // and always calling it first.
             $form->postProcessHook();
           }
-          $result = $payment->doPayment($paymentParams);
-          $form->_params = array_merge($form->_params, $result);
-          $form->assign('trxn_id', CRM_Utils_Array::value('trxn_id', $result));
-          if (!empty($result['trxn_id'])) {
-            $contribution->trxn_id = $result['trxn_id'];
-          }
-          if (!empty($result['payment_status_id'])) {
-            $contribution->payment_status_id = $result['payment_status_id'];
-          }
-          $result['contribution'] = $contribution;
-          if ($result['payment_status_id'] == CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution',
-            'status_id', 'Pending') && $payment->isSendReceiptForPending()) {
+          $contributionResult = $payment->doPayment($paymentParams);
+          $form->_params = array_merge($form->_params, $contributionResult);
+          $form->assign('trxn_id', CRM_Utils_Array::value('trxn_id', $contributionResult));
+          if ($contributionResult['payment_status_id'] == CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'status_id', 'Pending')
+            && $payment->isSendReceiptForPending()) {
             CRM_Contribute_BAO_ContributionPage::sendMail($contactID,
               $form->_values,
               $contribution->is_test
             );
           }
-          return $result;
+          return $contributionResult;
         }
         catch (\Civi\Payment\Exception\PaymentProcessorException $e) {
           // Clean up DB as appropriate.
@@ -215,9 +208,9 @@ class CRM_Contribute_BAO_Contribution_Utils {
             CRM_Contribute_BAO_ContributionRecur::deleteRecurContribution($paymentParams['contributionRecurID']);
           }
 
-          $result['is_payment_failure'] = TRUE;
-          $result['error'] = $e;
-          return $result;
+          $contributionResult['is_payment_failure'] = TRUE;
+          $contributionResult['error'] = $e;
+          return $contributionResult;
         }
       }
     }
@@ -230,11 +223,9 @@ class CRM_Contribute_BAO_Contribution_Utils {
       // This is kind of a back-up for pay-later $0 transactions.
       // In other flows they pick up the manual processor & get dealt with above (I
       // think that might be better...).
-      return [
-        'payment_status_id' => 1,
-        'contribution' => $contribution,
-        'payment_processor_id' => 0,
-      ];
+      $contributionResult['payment_status_id'] = CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'status_id', 'Pending');
+      $contributionResult['payment_processor_id'] = 0;
+      return $contributionResult;
     }
 
     CRM_Contribute_BAO_ContributionPage::sendMail($contactID,

@@ -1458,7 +1458,7 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
         CRM_Price_BAO_LineItem::getLineItemArray($membershipParams);
 
       }
-      $paymentResult = CRM_Contribute_BAO_Contribution_Utils::processConfirm(
+      $contributionResult = CRM_Contribute_BAO_Contribution_Utils::processConfirm(
         $form,
         $membershipParams,
         $contactID,
@@ -1466,11 +1466,11 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
         $isTest,
         $isRecurForFirstTransaction
       );
-      if (!empty($paymentResult['contribution'])) {
-        $paymentResults[] = ['contribution_id' => $paymentResult['contribution']->id, 'result' => $paymentResult];
-        $this->postProcessPremium($premiumParams, $paymentResult['contribution']);
+      if (!empty($contributionResult)) {
+        $paymentResults[$paymentResult['contribution']->id] = $contributionResult;
+        $this->postProcessPremium($premiumParams, $contributionResult);
         //note that this will be over-written if we are using a separate membership transaction. Otherwise there is only one
-        $membershipContribution = $paymentResult['contribution'];
+        $membershipContribution = $contributionResult;
         // Save the contribution ID so that I can be used in email receipts
         // For example, if you need to generate a tax receipt for the donation only.
         $form->_values['contribution_other_id'] = $membershipContribution->id;
@@ -1485,7 +1485,7 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
         }
         list($membershipContribution, $secondPaymentResult) = $this->processSecondaryFinancialTransaction($contactID, $form, array_merge($membershipParams, ['skipLineItem' => 1]),
           $isTest, $unprocessedLineItems, CRM_Utils_Array::value('minimum_fee', $membershipDetails, 0), CRM_Utils_Array::value('financial_type_id', $membershipDetails));
-        $paymentResults[] = ['contribution_id' => $membershipContribution->id, 'result' => $secondPaymentResult];
+        $paymentResults[$membershipContribution->id] = $secondPaymentResult;
         $totalAmount = $membershipContribution->total_amount;
       }
       catch (CRM_Core_Exception $e) {
@@ -1633,15 +1633,13 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
       // If this is a single membership-related contribution, it won't have
       // be performed yet, so do it now.
       if ($isPaidMembership && !$isProcessSeparateMembershipTransaction) {
-        $paymentActionResult = $payment->doPayment($paymentParams, 'contribute');
-        $paymentResults[] = ['contribution_id' => $paymentResult['contribution']->id, 'result' => $paymentActionResult];
+        $paymentResults[$paymentResult['contribution']->id] = $payment->doPayment($paymentParams, 'contribute');
       }
       // Do not send an email if Recurring transaction is done via Direct Mode
       // Email will we sent when the IPN is received.
-      foreach ($paymentResults as $result) {
-        //CRM-18211: Fix situation where second contribution doesn't exist because it is optional.
-        if ($result['contribution_id']) {
-          $this->completeTransaction($result['result'], $result['contribution_id']);
+      foreach ($paymentResults as $contributionId => $contributionParams) {
+        if ($contributionParams['payment_status_id'] == CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'status_id', 'Pending')) {
+          civicrm_api3('contribution', 'completetransaction', $contributionParams);
         }
       }
       return;
@@ -1666,10 +1664,10 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
           $paymentProcessorIDs = explode(CRM_Core_DAO::VALUE_SEPARATOR, CRM_Utils_Array::value('payment_processor', $this->_values));
           $this->_paymentProcessor['id'] = $paymentProcessorIDs[0];
         }
-        $result = ['payment_status_id' => 1, 'contribution' => $membershipContribution];
-        $this->completeTransaction($result, $result['contribution']->id);
+        $membershipContribution['payment_status_id'] = 1; // pending
+        civicrm_api3('contribution', 'completetransaction', $membershipContribution);
       }
-      // return as completeTransaction() already sends the receipt mail.
+      // return as completetransaction already sends the receipt mail.
       return;
     }
 
@@ -2311,7 +2309,7 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
         }
       }
 
-      $result = CRM_Contribute_BAO_Contribution_Utils::processConfirm($this, $paymentParams,
+      $contributionResult = CRM_Contribute_BAO_Contribution_Utils::processConfirm($this, $paymentParams,
         $contactID,
         $this->wrangleFinancialTypeID($this->_values['financial_type_id']),
         ($this->_mode == 'test') ? 1 : 0,
@@ -2320,12 +2318,14 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
 
       if (empty($result['is_payment_failure'])) {
         // @todo move premium processing to complete transaction if it truly is an 'after' action.
-        $this->postProcessPremium($premiumParams, $result['contribution']);
+        $this->postProcessPremium($premiumParams, $contributionResult);
       }
-      if (!empty($result['contribution'])) {
+
+      if ($contributionParams['payment_status_id'] == CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'status_id', 'Pending')) {
         // It seems this line is hit when there is a zero dollar transaction & in tests, not sure when else.
-        $this->completeTransaction($result, $result['contribution']->id);
+        civicrm_api3('contribution', 'completetransaction', $contributionParams);
       }
+
       return $result;
     }
   }
@@ -2439,6 +2439,7 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
 
   /**
    * Complete transaction if payment has been processed.
+   * @deprecated no longer used will be removed
    *
    * Check the result for a success outcome & if paid then complete the transaction.
    *
@@ -2451,6 +2452,7 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
    * @throws \Exception
    */
   protected function completeTransaction($result, $contributionID) {
+    CRM_Core_Error::deprecatedFunctionWarning('contribution.completetransaction API');
     if (CRM_Utils_Array::value('payment_status_id', $result) == 1) {
       try {
         civicrm_api3('contribution', 'completetransaction', [
