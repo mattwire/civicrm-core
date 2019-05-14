@@ -142,6 +142,8 @@ class CRM_Core_Resources {
     }
     $this->ajaxPopupsEnabled = (bool) Civi::settings()->get('ajaxPopupsEnabled');
     $this->paths = Civi::paths();
+
+    Civi::dispatcher()->addListener('hook_civicrm_buildAsset', 'CRM_Core_Resources::buildAsset');
   }
 
   /**
@@ -721,9 +723,9 @@ class CRM_Core_Resources {
       "packages/jquery/plugins/jquery.ui.datepicker.validation.min.js",
       "js/Common.js",
       "js/crm.datepicker.js",
-      "js/crm.ajax.js",
-      "js/wysiwyg/crm.wysiwyg.js",
     ];
+    $items[] = \Civi::service('asset_builder')->getUrl('crm.ajax.js');
+    $items[] = "js/wysiwyg/crm.wysiwyg.js";
 
     // Dynamic localization script
     $items[] = $this->addCacheCode(
@@ -951,6 +953,15 @@ class CRM_Core_Resources {
    */
   public static function isFullyFormedUrl($url) {
     return (substr($url, 0, 4) === 'http') || (substr($url, 0, 1) === '/');
+  }
+
+  public static function buildAsset($event) {
+    switch ($event->asset) {
+      case 'crm.ajax.js':
+        $event->content = file_get_contents(Civi::resources()->getPath('civicrm', 'js/crm.ajax.js'));
+        $event->mimetype = 'application/javascript';
+        break;
+    }
   }
 
 }
