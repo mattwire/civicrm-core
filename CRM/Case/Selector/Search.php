@@ -486,4 +486,209 @@ class CRM_Case_Selector_Search extends CRM_Core_Selector_Base {
     return ts('Case Search');
   }
 
+  /**
+   * Add the set of "actionLinks" to the case activity
+   *
+   * @param int $caseID
+   * @param int $contactID
+   * @param int $userID
+   * @param string $context
+   * @param $activityTypeId
+   * @param $activityDeleted
+   * @param $caseActivityId
+   * @param null $activityAttachmentIds
+   * @param bool $allowView
+   *
+   * @return string $linksMarkup
+   */
+  public static function addCaseActivityLinks($caseID, $contactID, $userID, $context, $activityTypeId, $activityDeleted, $caseActivityId, $activityAttachmentIds = NULL, $allowView = TRUE) {
+    $caseDeleted = CRM_Core_DAO::getFieldValue('CRM_Case_DAO_Case', $caseID, 'is_deleted');
+
+    $actionLinks = self::actionLinks();
+
+    // Check logged in user for permission.
+    if (CRM_Case_BAO_Case::checkPermission($caseActivityId, 'view', $activityTypeId, $userID)) {
+      $permissions[] = CRM_Core_Permission::VIEW;
+    }
+    if (!$allowView) {
+      unset($actionLinks[CRM_Core_Action::VIEW]);
+    }
+    if (!$activityDeleted) {
+      // Activity is not deleted, allow user to edit/delete if they have permission
+
+      // hide Edit link if:
+      // 1. User does not have edit permission.
+      // 2. Activity type is NOT editable (special case activities).CRM-5871
+      if (CRM_Case_BAO_Case::checkPermission($caseActivityId, 'edit', $activityTypeId, $userID)) {
+        $permissions[] = CRM_Core_Permission::EDIT;
+      }
+      if (in_array($activityTypeId, CRM_Activity_BAO_Activity::getViewOnlyActivityTypeIDs())) {
+        unset($actionLinks[CRM_Core_Action::UPDATE]);
+      }
+      if (CRM_Case_BAO_Case::checkPermission($caseActivityId, 'delete', $activityTypeId, $userID)) {
+        $permissions[] = CRM_Core_Permission::DELETE;
+      }
+      unset($actionLinks[CRM_Core_Action::RENEW]);
+    }
+    $extraMask = 0;
+    if ($activityDeleted && !$caseDeleted
+       && (CRM_Case_BAO_Case::checkPermission($caseActivityId, 'delete', $activityTypeId, $userID))) {
+      // Case is not deleted but activity is.
+      // Allow user to restore activity if they have delete permissions
+      unset($actionLinks[CRM_Core_Action::DELETE]);
+      $extraMask = CRM_Core_Action::RENEW;
+    }
+    if (!CRM_Case_BAO_Case::checkPermission($caseActivityId, 'Move To Case', $activityTypeId)) {
+      unset ($actionLinks[CRM_Core_Action::DETACH]);
+    }
+    if (!CRM_Case_BAO_Case::checkPermission($caseActivityId, 'Copy To Case', $activityTypeId)) {
+      unset($actionLinks[CRM_Core_Action::COPY]);
+    }
+
+    $actionMask = CRM_Core_Action::mask($permissions) | $extraMask;
+
+    $values = [
+      'aid' => $caseActivityId,
+      'cid' => $contactID,
+      'cxt' => empty($context) ? '' : "&context={$context}",
+      'caseid' => $caseID,
+    ];
+    $linksMarkup = CRM_Core_Action::formLink($actionLinks,
+      $actionMask,
+      $values,
+      ts('more'),
+      FALSE,
+      'case.tab.row',
+      'Activity',
+      $caseActivityId
+    );
+
+    // if there are file attachments we will return how many and, if only one, add a link to it
+    if (!empty($activityAttachmentIds)) {
+      $linksMarkup .= implode(' ', CRM_Core_BAO_File::paperIconAttachment('civicrm_activity', $caseActivityId));
+    }
+
+    return $linksMarkup;
+  }
+
+  /**
+   * @param int $caseID
+   * @param int $contactID
+   * @param int $userID
+   * @param string $context
+   * @param int $activityTypeId
+   * @param int $activityDeleted
+   * @param int $caseActivityId
+   * @param int $activityAttachmentIds
+   * @param bool $allowView
+   *
+   * @return string
+   */
+  public static function permissionedActionLinks($caseID, $contactID, $userID, $context, $activityTypeId, $activityDeleted, $caseActivityId, $activityAttachmentIds = NULL, $allowView = TRUE) {
+    $caseDeleted = CRM_Core_DAO::getFieldValue('CRM_Case_DAO_Case', $caseID, 'is_deleted');
+    $values = [
+      'aid' => $caseActivityId,
+      'cid' => $contactID,
+      'cxt' => empty($context) ? '' : "&context={$context}",
+      'caseid' => $caseID,
+    ];
+    $actionLinks = self::actionLinks();
+
+    // Check logged in user for permission.
+    if (CRM_Case_BAO_Case::checkPermission($caseActivityId, 'view', $activityTypeId, $userID)) {
+      $permissions[] = CRM_Core_Permission::VIEW;
+    }
+    if (!$allowView) {
+      unset($actionLinks[CRM_Core_Action::VIEW]);
+    }
+    if (!$activityDeleted) {
+      // Activity is not deleted, allow user to edit/delete if they have permission
+
+      // hide Edit link if:
+      // 1. User does not have edit permission.
+      // 2. Activity type is NOT editable (special case activities).CRM-5871
+      if (CRM_Case_BAO_Case::checkPermission($caseActivityId, 'edit', $activityTypeId, $userID)) {
+        $permissions[] = CRM_Core_Permission::EDIT;
+      }
+      if (in_array($activityTypeId, CRM_Activity_BAO_Activity::getViewOnlyActivityTypeIDs())) {
+        unset($actionLinks[CRM_Core_Action::UPDATE]);
+      }
+      if (CRM_Case_BAO_Case::checkPermission($caseActivityId, 'delete', $activityTypeId, $userID)) {
+        $permissions[] = CRM_Core_Permission::DELETE;
+      }
+      unset($actionLinks[CRM_Core_Action::RENEW]);
+    }
+    $extraMask = 0;
+    if ($activityDeleted && !$caseDeleted
+      && (CRM_Case_BAO_Case::checkPermission($caseActivityId, 'delete', $activityTypeId, $userID))) {
+      // Case is not deleted but activity is.
+      // Allow user to restore activity if they have delete permissions
+      unset($actionLinks[CRM_Core_Action::DELETE]);
+      $extraMask = CRM_Core_Action::RENEW;
+    }
+    if (!CRM_Case_BAO_Case::checkPermission($caseActivityId, 'Move To Case', $activityTypeId)) {
+      unset ($actionLinks[CRM_Core_Action::DETACH]);
+    }
+    if (!CRM_Case_BAO_Case::checkPermission($caseActivityId, 'Copy To Case', $activityTypeId)) {
+      unset($actionLinks[CRM_Core_Action::COPY]);
+    }
+
+    $actionMask = CRM_Core_Action::mask($permissions) | $extraMask;
+    return CRM_Core_Action::filterLinks($actionLinks, $actionMask, $values, 'case.activity', 'Activity', $caseActivityId);
+  }
+
+  /**
+   * Get the action links for this page.
+   *
+   * @return array
+   */
+  public static function actionLinks() {
+    // check if variable _actionsLinks is populated
+    if (!isset(self::$_actionLinks)) {
+      self::$_actionLinks = [
+        CRM_Core_Action::VIEW => [
+          'name' => ts('View'),
+          'url' => 'civicrm/case/activity/view',
+          'qs' => 'reset=1&cid=%%cid%%&caseid=%%caseid%%&aid=%%aid%%',
+          'title' => ts('View'),
+        ],
+        CRM_Core_Action::UPDATE => [
+          'name' => ts('Edit'),
+          'url' => 'civicrm/case/activity',
+          'qs' => 'reset=1&cid=%%cid%%&caseid=%%caseid%%&id=%%aid%%&action=update%%cxt%%',
+          'title' => ts('Edit'),
+          'icon' => 'fa-pencil',
+        ],
+        CRM_Core_Action::DELETE => [
+          'name' => ts('Delete'),
+          'url' => 'civicrm/case/activity',
+          'qs' => 'reset=1&cid=%%cid%%&caseid=%%caseid%%&id=%%aid%%&action=delete%%cxt%%',
+          'title' => ts('Delete'),
+          'icon' => 'fa-trash',
+        ],
+        CRM_Core_Action::RENEW => [
+          'name' => ts('Restore'),
+          'url' => 'civicrm/case/activity',
+          'qs' => 'reset=1&cid=%%cid%%&caseid=%%caseid%%&id=%%aid%%&action=renew%%cxt%%',
+          'title' => ts('Restore'),
+        ],
+        CRM_Core_Action::DETACH => [
+          'name' => ts('Move To Case'),
+          'url' => '#',
+          'qs' => '',
+          'title' => ts('Move To Case'),
+          'extra' => 'onclick = "Javascript:fileOnCase( \'move\', %%aid%%, %%caseid%%, this ); return false;"',
+        ],
+        CRM_Core_Action::COPY => [
+          'name' => ts('Copy To Case'),
+          'url' => '#',
+          'qs' => '',
+          'title' => ts('Copy To Case'),
+          'extra' => 'onclick = "Javascript:fileOnCase( \'copy\', %%aid%%, %%caseid%%, this ); return false;"',
+        ],
+      ];
+    }
+    return self::$_actionLinks;
+  }
+
 }
