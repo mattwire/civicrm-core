@@ -28,6 +28,9 @@ class CRM_Core_TestEntity {
   // Ideally the display of test transactions would be a per-user setting or permission
   //  so it can be toggled on/off as required and does not affect "day-to-day" usage.
 
+  const TEST_AND_LIVE=0;
+  const TEST_ONLY=1;
+  const LIVE_ONLY=2;
   /**
    * Append "test" text to a string. eg. Member Dues (test) or My registration (test)
    *
@@ -37,6 +40,27 @@ class CRM_Core_TestEntity {
    */
   public static function appendTestText($text) {
     return $text . ' ' . ts('(test)');
+  }
+
+  public static function isTestEnabled() {
+    switch (Civi::settings()->get('contact_test_entities')) {
+      case self::TEST_AND_LIVE:
+      case self::TEST_ONLY:
+        return TRUE;
+
+      default:
+        return FALSE;
+    }
+  }
+
+  public static function isLiveEnabled() {
+    switch (Civi::settings()->get('contact_test_entities')) {
+      case self::LIVE_ONLY:
+        return TRUE;
+
+      default:
+        return FALSE;
+    }
   }
 
 }

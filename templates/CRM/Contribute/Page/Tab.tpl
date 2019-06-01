@@ -37,7 +37,7 @@
               {capture assign=link}class="action-item" href="{$newContribURL}"{/capture}
               {ts 1=$link}Click <a %1>Record Contribution</a> to record a new contribution received from this contact.{/ts}
               {if $newCredit}
-                {capture assign=newCreditURL}{crmURL p="civicrm/contact/view/contribution" q="reset=1&action=add&cid=`$contactId`&context=contribution&mode=live"}{/capture}
+                {capture assign=newCreditURL}{crmURL p="civicrm/contact/view/contribution" q="reset=1&action=add&cid=`$contactId`&context=contribution&mode=test"}{/capture}
                 {capture assign=link}class="action-item" href="{$newCreditURL}"{/capture}
                 {ts 1=$link}Click <a %1>Submit Credit Card Contribution</a> to process a new contribution on behalf of the contributor using their credit card.{/ts}
               {/if}

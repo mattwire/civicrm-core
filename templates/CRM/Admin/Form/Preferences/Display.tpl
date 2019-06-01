@@ -221,7 +221,13 @@
         <td class="label">{$form.theme_frontend.label} {help id="theme_frontend"}</td>
         <td>{$form.theme_frontend.html}</td>
       </tr>
-      {/if}
+    {/if}
+    <tr class="crm-preferences-display-form-block_contact_test_entities">
+      <td class="label">{$form.contact_test_entities.label}</td>
+      <td>
+        {$form.contact_test_entities.html}
+      </td>
+    </tr>
   </table>
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
 </div>
