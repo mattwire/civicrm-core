@@ -815,23 +815,6 @@ class CRM_Event_Form_Registration extends CRM_Core_Form {
     $params = $form->_params;
     $transaction = new CRM_Core_Transaction();
 
-    $groupName = 'participant_role';
-    $query = "
-SELECT  v.label as label ,v.value as value
-FROM   civicrm_option_value v,
-       civicrm_option_group g
-WHERE  v.option_group_id = g.id
-  AND  g.name            = %1
-  AND  v.is_active       = 1
-  AND  g.is_active       = 1
-";
-    $p = array(1 => array($groupName, 'String'));
-
-    $dao = CRM_Core_DAO::executeQuery($query, $p);
-    if ($dao->fetch()) {
-      $roleID = $dao->value;
-    }
-
     // handle register date CRM-4320
     $registerDate = NULL;
     if (!empty($form->_allowConfirmation) && $form->_participantId) {
@@ -852,9 +835,7 @@ WHERE  v.option_group_id = g.id
       'status_id' => CRM_Utils_Array::value('participant_status',
         $params, 1
       ),
-      'role_id' => CRM_Utils_Array::value('participant_role_id',
-        $params, $roleID
-      ),
+      'role_id' => self::getDefaultRoleID($params),
       'register_date' => ($registerDate) ? $registerDate : date('YmdHis'),
       'source' => CRM_Utils_String::ellipsify(
         isset($params['participant_source']) ? CRM_Utils_Array::value('participant_source', $params) : CRM_Utils_Array::value('description', $params),
@@ -904,6 +885,26 @@ WHERE  v.option_group_id = g.id
     $transaction->commit();
 
     return $participant;
+  }
+
+  /**
+   * Get the ID of the default (first) participant role
+   *
+   * @param array $params
+   *
+   * @return array|mixed
+   * @throws \CiviCRM_API3_Exception
+   */
+  private static function getDefaultRoleID($params) {
+    $roleID = CRM_Utils_Array::value('participant_role_id', $params);
+    if (!$roleID) {
+      $roleID = civicrm_api3('OptionValue', 'getvalue', [
+        'return' => "value",
+        'option_group_id' => "participant_role",
+        'options' => ['limit' => 1],
+      ]);
+    }
+    return $roleID;
   }
 
   /**
