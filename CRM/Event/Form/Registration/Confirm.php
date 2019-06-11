@@ -86,57 +86,7 @@ class CRM_Event_Form_Registration_Confirm extends CRM_Event_Form_Registration {
 
     // The concept of contributeMode is deprecated.
     if ($this->_contributeMode == 'express') {
-      $params = [];
-      // rfp == redirect from paypal
-      // rfp is probably not required - the getPreApprovalDetails should deal with any payment-processor specific 'stuff'
-      $rfp = CRM_Utils_Request::retrieve('rfp', 'Boolean',
-        CRM_Core_DAO::$_nullObject, FALSE, NULL, 'GET'
-      );
-
-      //we lost rfp in case of additional participant. So set it explicitly.
-      if ($rfp || CRM_Utils_Array::value('additional_participants', $this->_params[0], FALSE)) {
-        if (!empty($this->_paymentProcessor) &&  $this->_paymentProcessor['object']->supports('preApproval')) {
-          $preApprovalParams = $this->_paymentProcessor['object']->getPreApprovalDetails($this->get('pre_approval_parameters'));
-          $params = array_merge($this->_params, $preApprovalParams);
-        }
-        CRM_Core_Payment_Form::mapParams($this->_bltID, $params, $params, FALSE);
-
-        // set a few other parameters that are not really specific to this method because we don't know what
-        // will break if we change this.
-        $params['amount'] = $this->_params[0]['amount'];
-        if (!empty($this->_params[0]['discount'])) {
-          $params['discount'] = $this->_params[0]['discount'];
-          $params['discountAmount'] = $this->_params[0]['discountAmount'];
-          $params['discountMessage'] = $this->_params[0]['discountMessage'];
-        }
-
-        $params['amount_level'] = $this->_params[0]['amount_level'];
-        $params['currencyID'] = $this->_params[0]['currencyID'];
-
-        // also merge all the other values from the profile fields
-        $values = $this->controller->exportValues('Register');
-        $skipFields = [
-          'amount',
-          "street_address-{$this->_bltID}",
-          "city-{$this->_bltID}",
-          "state_province_id-{$this->_bltID}",
-          "postal_code-{$this->_bltID}",
-          "country_id-{$this->_bltID}",
-        ];
-
-        foreach ($values as $name => $value) {
-          // skip amount field
-          if (!in_array($name, $skipFields)) {
-            $params[$name] = $value;
-          }
-          if (substr($name, 0, 6) == 'price_') {
-            $params[$name] = $this->_params[0][$name];
-          }
-        }
-        $this->set('getExpressCheckoutDetails', $params);
-      }
-      $this->_params[0] = array_merge($this->_params[0], $params);
-      $this->_params[0]['is_primary'] = 1;
+      $this->preProcessExpress();
     }
     else {
       //process only primary participant params.
@@ -187,6 +137,58 @@ class CRM_Event_Form_Registration_Confirm extends CRM_Event_Form_Registration {
     }
 
     $this->set('params', $this->_params);
+  }
+
+  private function preProcessExpress() {
+    $params = [];
+    // rfp == redirect from paypal
+    // @fixme rfp is probably not required - the getPreApprovalDetails should deal with any payment-processor specific 'stuff'
+    $rfp = CRM_Utils_Request::retrieve('rfp', 'Boolean', CRM_Core_DAO::$_nullObject, FALSE, NULL, 'GET');
+
+    //we lost rfp in case of additional participant. So set it explicitly.
+    if ($rfp || CRM_Utils_Array::value('additional_participants', $this->_params[0], FALSE)) {
+      if (!empty($this->_paymentProcessor) &&  $this->_paymentProcessor['object']->supports('preApproval')) {
+        $preApprovalParams = $this->_paymentProcessor['object']->getPreApprovalDetails($this->get('pre_approval_parameters'));
+        $params = array_merge($this->_params, $preApprovalParams);
+      }
+      CRM_Core_Payment_Form::mapParams($this->_bltID, $params, $params, FALSE);
+
+      // set a few other parameters that are not really specific to this method because we don't know what
+      // will break if we change this.
+      $params['amount'] = $this->_params[0]['amount'];
+      if (!empty($this->_params[0]['discount'])) {
+        $params['discount'] = $this->_params[0]['discount'];
+        $params['discountAmount'] = $this->_params[0]['discountAmount'];
+        $params['discountMessage'] = $this->_params[0]['discountMessage'];
+      }
+
+      $params['amount_level'] = $this->_params[0]['amount_level'];
+      $params['currencyID'] = $this->_params[0]['currencyID'];
+
+      // also merge all the other values from the profile fields
+      $values = $this->controller->exportValues('Register');
+      $skipFields = [
+        'amount',
+        "street_address-{$this->_bltID}",
+        "city-{$this->_bltID}",
+        "state_province_id-{$this->_bltID}",
+        "postal_code-{$this->_bltID}",
+        "country_id-{$this->_bltID}",
+      ];
+
+      foreach ($values as $name => $value) {
+        // skip amount field
+        if (!in_array($name, $skipFields)) {
+          $params[$name] = $value;
+        }
+        if (substr($name, 0, 6) == 'price_') {
+          $params[$name] = $this->_params[0][$name];
+        }
+      }
+      $this->set('getExpressCheckoutDetails', $params);
+    }
+    $this->_params[0] = array_merge($this->_params[0], $params);
+    $this->_params[0]['is_primary'] = 1;
   }
 
   /**
