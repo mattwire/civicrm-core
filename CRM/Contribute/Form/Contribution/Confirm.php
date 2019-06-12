@@ -291,7 +291,8 @@ class CRM_Contribute_Form_Contribution_Confirm extends CRM_Contribute_Form_Contr
     $this->_params = $this->controller->exportValues('Main');
     $this->_params['ip_address'] = CRM_Utils_System::ipAddress();
     $this->_params['amount'] = $this->get('amount');
-    if (isset($this->_params['amount'])) {
+
+    if (!$this->getFixedAmountSubmitted($this->_params) && isset($this->_params['amount'])) {
       $this->setFormAmountFields($this->_params['priceSetId']);
     }
 
