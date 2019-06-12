@@ -120,4 +120,15 @@ class CRM_Utils_ReCAPTCHA {
     }
   }
 
+  /**
+   * Enable ReCAPTCHA on Contribution form
+   */
+  public static function enableCaptchaOnForm(&$form) {
+    $captcha = CRM_Utils_ReCAPTCHA::singleton();
+    if ($captcha->hasSettingsAvailable()) {
+      $captcha->add($form);
+      $form->assign('isCaptcha', TRUE);
+    }
+  }
+
 }
