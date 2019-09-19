@@ -55,6 +55,7 @@ class CRM_Core_TestEntity {
 
   public static function isLiveEnabled() {
     switch (Civi::settings()->get('contact_test_entities')) {
+      case self::TEST_AND_LIVE:
       case self::LIVE_ONLY:
         return TRUE;
 

@@ -130,6 +130,9 @@ class CRM_Contribute_Page_Tab extends CRM_Core_Page {
     // add recurring block
     $this->addRecurringContributionsBlock();
 
+    // Add create buttons
+    $this->addCreateButtons();
+
     // enable/disable soft credit records for test contribution
     $isTest = 0;
     if (CRM_Utils_Request::retrieve('isTest', 'Positive', $this)) {
@@ -162,6 +165,40 @@ class CRM_Contribute_Page_Tab extends CRM_Core_Page {
       $this->assign('tabCount', $tabCount);
       $this->ajaxResponse['tabCount'] = $tabCount;
     }
+  }
+
+  private function addCreateButtons() {
+    if ($this->_permission != CRM_Core_Permission::EDIT) {
+      return [];
+    }
+
+    $buttons[] = [
+      'title' => ts('Record Contribution (Check, Cash, EFT ...)'),
+      'url' => CRM_Utils_System::url('civicrm/contact/view/contribution', "reset=1&action=add&cid={$this->_contactId}&context=contribution"),
+      'icon' => 'fa-plus-circle',
+      'accesskey' => 'N',
+    ];
+    if (CRM_Core_Config::isEnabledBackOfficeCreditCardPayments()) {
+      if (CRM_Core_TestEntity::isLiveEnabled()) {
+        $buttons[] = [
+          'title' => ts('Submit Credit Card Contribution'),
+          'url' => CRM_Utils_System::url('civicrm/contact/view/contribution', "reset=1&action=add&cid={$this->_contactId}&context=contribution&mode=live"),
+          'icon' => 'fa-credit-card',
+          'accesskey' => 'N',
+        ];
+      }
+      if (CRM_Core_TestEntity::isTestEnabled()) {
+        $buttons[] = [
+          'title' => CRM_Core_TestEntity::appendTestText(ts('Submit Credit Card Contribution')),
+          'url' => CRM_Utils_System::url('civicrm/contact/view/contribution', "reset=1&action=add&cid={$this->_contactId}&context=contribution&mode=test"),
+          'icon' => 'fa-credit-card',
+          'accesskey' => 'N',
+        ];
+      }
+    }
+
+    $this->assign('addCreateButtons', $buttons);
+
   }
 
   /**

@@ -48,10 +48,9 @@
 
           {if $action eq 16 and $permission EQ 'edit'}
             <div class="action-link">
-              <a accesskey="N" href="{$newContribURL}" class="button"><span><i class="crm-i fa-plus-circle"></i> {ts}Record Contribution (Check, Cash, EFT ...){/ts}</span></a>
-              {if $newCredit}
-                <a accesskey="N" href="{$newCreditURL}" class="button"><span><i class="crm-i fa-credit-card"></i> {ts}Submit Credit Card Contribution{/ts}</span></a>
-              {/if}
+              {foreach from=$addCreateButtons item=btn}
+                <a accesskey="{$btn.accesskey}" href="{$btn.url}" class="button"><span><i class="crm-i {$btn.icon}"></i> {$btn.title}</span></a>
+              {/foreach}
               <br /><br />
             </div>
             <div class='clear'></div>
