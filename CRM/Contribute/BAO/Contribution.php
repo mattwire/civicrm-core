@@ -4097,7 +4097,7 @@ INNER JOIN civicrm_activity ON civicrm_activity_contact.activity_id = civicrm_ac
         SELECT GROUP_CONCAT(fa.`name`) as financial_account,
           ft.total_amount,
           ft.payment_instrument_id,
-          ft.trxn_date, ft.trxn_id, ft.status_id, ft.check_number, ft.currency, ft.pan_truncation, ft.card_type_id, ft.id
+          ft.trxn_date, ft.trxn_id, ft.order_reference, ft.status_id, ft.check_number, ft.currency, ft.pan_truncation, ft.card_type_id, ft.id
 
         FROM civicrm_contribution con
           LEFT JOIN civicrm_entity_financial_trxn eft ON (eft.entity_id = con.id AND eft.entity_table = 'civicrm_contribution')
@@ -4156,7 +4156,7 @@ INNER JOIN civicrm_activity ON civicrm_activity_contact.activity_id = civicrm_ac
           'financial_type' => $resultDAO->financial_account,
           'payment_instrument' => $paidByLabel,
           'receive_date' => $resultDAO->trxn_date,
-          'trxn_id' => $resultDAO->trxn_id,
+          'trxn_id' => $resultDAO->trxn_id . ($resultDAO->order_reference ? " ({$resultDAO->order_reference})" : ''),
           'status' => $statuses[$resultDAO->status_id],
           'currency' => $resultDAO->currency,
           'action' => $paymentEditLink,

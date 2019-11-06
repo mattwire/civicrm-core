@@ -31,7 +31,7 @@
       <th>{ts}Type{/ts}</th>
       <th>{ts}Payment Method{/ts}</th>
       <th>{ts}Received{/ts}</th>
-      <th>{ts}Transaction ID{/ts}</th>
+      <th>{ts}Transaction ID (Order Ref){/ts}</th>
       <th>{ts}Status{/ts}</th>
       <th></th>
     </tr>
