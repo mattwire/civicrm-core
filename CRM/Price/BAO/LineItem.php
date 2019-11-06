@@ -170,7 +170,7 @@ class CRM_Price_BAO_LineItem extends CRM_Price_DAO_LineItem {
 FROM civicrm_line_item li
 WHERE li.contribution_id = %1";
     $params = [1 => [$contributionId, 'Integer']];
-    $lineItemTotal = CRM_Core_DAO::singleValueQuery($sqlLineItemTotal, $params);
+    $lineItemTotal = (float) CRM_Core_DAO::singleValueQuery($sqlLineItemTotal, $params);
     return $lineItemTotal;
   }
 
