@@ -36,31 +36,55 @@
  */
 class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
 
+  use CRM_Core_Form_EntityFormTrait;
+
+  public function getDefaultEntity() {
+    return 'Contribution';
+  }
+
+  /**
+   * Fields for the entity to be assigned to the template.
+   *
+   * Fields may have keys
+   *  - name (required to show in tpl from the array)
+   *  - description (optional, will appear below the field)
+   *  - not-auto-addable - this class will not attempt to add the field using addField.
+   *    (this will be automatically set if the field does not have html in it's metadata
+   *    or is not a core field on the form's entity).
+   *  - help (option) add help to the field - e.g ['id' => 'id-source', 'file' => 'CRM/Contact/Form/Contact']]
+   *  - template - use a field specific template to render this field
+   *  - required
+   *  - is_freeze (field should be frozen).
+   *
+   * @var array
+   */
+  protected $entityFields = [];
+
   /**
    * Set variables up before form is built.
    */
   public function preProcess() {
-    $id = $this->get('id');
-    $params = ['id' => $id];
+    $this->setEntityId($this->get('id'));
     $context = CRM_Utils_Request::retrieve('context', 'Alphanumeric', $this);
     $this->assign('context', $context);
 
-    $values = CRM_Contribute_BAO_Contribution::getValuesWithMappings($params);
+    //$values = CRM_Contribute_BAO_Contribution::getValuesWithMappings($params);
+    $values = civicrm_api3('Contribution', 'getsingle', ['id' => $this->getEntityId()]);
 
-    if (CRM_Financial_BAO_FinancialType::isACLFinancialTypeStatus() && $this->_action & CRM_Core_Action::VIEW) {
+    if (CRM_Financial_BAO_FinancialType::isACLFinancialTypeStatus() && $this->isViewContext()) {
       $financialTypeID = CRM_Contribute_PseudoConstant::financialType($values['financial_type_id']);
-      CRM_Financial_BAO_FinancialType::checkPermissionedLineItems($id, 'view');
-      if (CRM_Financial_BAO_FinancialType::checkPermissionedLineItems($id, 'edit', FALSE)) {
+      CRM_Financial_BAO_FinancialType::checkPermissionedLineItems($this->getEntityId(), 'view');
+      if (CRM_Financial_BAO_FinancialType::checkPermissionedLineItems($this->getEntityId(), 'edit', FALSE)) {
         $this->assign('canEdit', TRUE);
       }
-      if (CRM_Financial_BAO_FinancialType::checkPermissionedLineItems($id, 'delete', FALSE)) {
+      if (CRM_Financial_BAO_FinancialType::checkPermissionedLineItems($this->getEntityId(), 'delete', FALSE)) {
         $this->assign('canDelete', TRUE);
       }
       if (!CRM_Core_Permission::check('view contributions of type ' . $financialTypeID)) {
         CRM_Core_Error::statusBounce(ts('You do not have permission to access this page.'));
       }
     }
-    elseif ($this->_action & CRM_Core_Action::VIEW) {
+    elseif ($this->isViewContext()) {
       $this->assign('noACL', TRUE);
     }
     CRM_Contribute_BAO_Contribution::resolveDefaults($values);
@@ -85,37 +109,28 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
     }
 
     if (!empty($values['contribution_recur_id'])) {
-      $sql = "SELECT  installments, frequency_interval, frequency_unit FROM civicrm_contribution_recur WHERE id = %1";
-      $params = [1 => [$values['contribution_recur_id'], 'Integer']];
-      $dao = CRM_Core_DAO::executeQuery($sql, $params);
-      if ($dao->fetch()) {
-        $values['recur_installments'] = $dao->installments;
-        $values['recur_frequency_unit'] = $dao->frequency_unit;
-        $values['recur_frequency_interval'] = $dao->frequency_interval;
-      }
+      $recurDetails = civicrm_api3('ContributionRecur', 'getsingle', [
+        'return' => ["installments", "frequency_unit", "frequency_interval"],
+        'id' => $values['contribution_recur_id'],
+      ]);
+      $values['recur_installments'] = $recurDetails['installments'];
+      $values['recur_frequency_unit'] = $recurDetails['frequency_unit'];
+      $values['recur_frequency_interval'] = $recurDetails['frequency_interval'];
     }
 
-    $groupTree = CRM_Core_BAO_CustomGroup::getTree('Contribution', NULL, $id, 0, CRM_Utils_Array::value('financial_type_id', $values));
-    CRM_Core_BAO_CustomGroup::buildCustomDataView($this, $groupTree, FALSE, NULL, NULL, NULL, $id);
+    // This sets the subtype so entity form can load custom data for a specific financial type
+    $this->_entitySubTypeId = CRM_Utils_Array::value('financial_type_id', $values);
 
     $premiumId = NULL;
-    if ($id) {
-      $dao = new CRM_Contribute_DAO_ContributionProduct();
-      $dao->contribution_id = $id;
-      if ($dao->find(TRUE)) {
-        $premiumId = $dao->id;
-        $productID = $dao->product_id;
-      }
+    try {
+      $premium = civicrm_api3('ContributionProduct', 'getsingle', ['contribution_id' => $this->getEntityId(), 'options' => ['limit' => 1]]);
+      $product = civicrm_api3('Product', 'getsingle', ['id' => $premium['product_id'], 'options' => ['limit' => 1]]);
+      $this->assign('premium', $product['name']);
+      $this->assign('option', $premium['product_option']);
+      $this->assign('fulfilled', $premium['fulfilled_date']);
     }
-
-    if ($premiumId) {
-      $productDAO = new CRM_Contribute_DAO_Product();
-      $productDAO->id = $productID;
-      $productDAO->find(TRUE);
-
-      $this->assign('premium', $productDAO->name);
-      $this->assign('option', $dao->product_option);
-      $this->assign('fulfilled', $dao->fulfilled_date);
+    catch (Exception $e) {
+      // No products
     }
 
     // Get Note
@@ -144,8 +159,8 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
 
     $lineItems = [];
     $displayLineItems = FALSE;
-    if ($id) {
-      $lineItems = [CRM_Price_BAO_LineItem::getLineItemsByContributionID(($id))];
+    if ($this->getEntityId()) {
+      $lineItems = [CRM_Price_BAO_LineItem::getLineItemsByContributionID(($this->getEntityId()))];
       $firstLineItem = reset($lineItems[0]);
       if (empty($firstLineItem['price_set_id'])) {
         // CRM-20297 All we care is that it's not QuickConfig, so no price set
@@ -176,7 +191,7 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
       $values['campaign'] = $campaigns[$campaignId];
     }
     if ($values['contribution_status'] == 'Refunded') {
-      $this->assign('refund_trxn_id', CRM_Core_BAO_FinancialTrxn::getRefundTransactionTrxnID($id));
+      $this->assign('refund_trxn_id', CRM_Core_BAO_FinancialTrxn::getRefundTransactionTrxnID($this->getEntityId()));
     }
 
     // assign values to the template
@@ -189,7 +204,7 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
       $this->assign('totalTaxAmount', $values['tax_amount']);
     }
 
-    $displayName = CRM_Contact_BAO_Contact::displayName($values['contact_id']);
+    $displayName = $values['display_name'];
     $this->assign('displayName', $displayName);
 
     // Check if this is default domain contact CRM-10482
@@ -226,11 +241,11 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
       NULL,
       $recentOther
     );
-    $contributionStatus = $status[$values['contribution_status_id']];
+    $contributionStatus = CRM_Core_PseudoConstant::getName('CRM_Contribute_BAO_Contribution', 'contribution_status_id', $values['contribution_status_id']);
     if (in_array($contributionStatus, ['Partially paid', 'Pending refund'])
-        || ($contributionStatus == 'Pending' && $values['is_pay_later'])
+        || ($contributionStatus === 'Pending' && $values['is_pay_later'])
         ) {
-      if ($contributionStatus == 'Pending refund') {
+      if ($contributionStatus === 'Pending refund') {
         $this->assign('paymentButtonName', ts('Record Refund'));
       }
       else {
@@ -238,24 +253,17 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
       }
       $this->assign('addRecordPayment', TRUE);
       $this->assign('contactId', $values['contact_id']);
-      $this->assign('componentId', $id);
+      $this->assign('componentId', $this->getEntityId());
       $this->assign('component', 'contribution');
     }
-    $this->assignPaymentInfoBlock($id);
+    $this->assignPaymentInfoBlock($this->getEntityId());
   }
 
   /**
    * Build the form object.
    */
   public function buildQuickForm() {
-    $this->addButtons([
-      [
-        'type' => 'cancel',
-        'name' => ts('Done'),
-        'spacing' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;',
-        'isDefault' => TRUE,
-      ],
-    ]);
+    $this->buildQuickEntityForm();
   }
 
   /**
