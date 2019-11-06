@@ -49,8 +49,12 @@ class CRM_Contribute_Page_PaymentInfo extends CRM_Core_Page {
   }
 
   public function browse() {
-    $getTrxnInfo = $this->_context == 'transaction' ? TRUE : FALSE;
-    $paymentInfo = CRM_Contribute_BAO_Contribution::getPaymentInfo($this->_id, $this->_component, $getTrxnInfo, TRUE);
+    $paymentInfo = civicrm_api3('Contribution', 'getbalance', ['id' => $this->_id])['values'];
+    $paymentInfo['payLater'] = (bool) civicrm_api3('Contribution', 'getvalue', [
+      'return' => 'is_pay_later',
+      'id' => $this->_id,
+    ]);
+
     if ($this->_context == 'payment_info') {
       $this->assign('paymentInfo', $paymentInfo);
     }

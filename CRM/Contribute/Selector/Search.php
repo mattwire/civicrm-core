@@ -528,6 +528,10 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
         self::$_columnHeaders,
         [
           [
+            'name' => ts('Paid'),
+            'field_name' => 'paid_amount',
+          ],
+          [
             'name' => ts('Type'),
             'sort' => 'financial_type',
             'field_name' => 'financial_type',

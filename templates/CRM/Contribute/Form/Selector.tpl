@@ -71,6 +71,10 @@
         {assign var='columnName' value=$column.field_name}
         {if !$columnName}{* if field_name has not been set skip, this helps with not changing anything not specifically edited *}
         {elseif $columnName === 'total_amount'}{* rendered above as soft credit columns = confusing *}
+        {elseif $columnName === 'paid_amount'}
+            <td class="crm-contribution-{$columnName} nowrap">
+              &nbsp; {$row.paid_amount|crmMoney:$row.currency}
+            </td>
         {elseif $column.type === 'actions'}{* rendered below as soft credit column handling = not fixed *}
         {elseif $columnName == 'contribution-status'}
           <td class="crm-contribution-status">
