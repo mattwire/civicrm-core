@@ -285,6 +285,7 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
     $this->assign('transaction', TRUE);
     $this->assign('payments', $paymentInfo['transaction']);
     $this->assign('paymentLinks', $paymentInfo['payment_links']);
+    $this->assign('paymentInfo', $paymentInfo);
     return $title;
   }
 
