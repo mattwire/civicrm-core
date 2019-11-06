@@ -158,7 +158,7 @@ class CRM_Event_BAO_AdditionalPaymentTest extends CiviUnitTestCase {
     $contributionID = $result['contribution']['id'];
 
     // check payment info
-    $paymentInfo = CRM_Contribute_BAO_Contribution::getPaymentInfo($result['participant']['id'], 'event');
+    $paymentInfo = api_v3_ParticipantPaymentTest::getPaymentInfo($result['participant']['id']);
     $this->assertEquals(round($paymentInfo['total']), $feeAmt, 'Total amount recorded is not proper');
     $this->assertEquals(round($paymentInfo['paid']), $amtPaid, 'Amount paid is not proper');
     $this->assertEquals(round($paymentInfo['balance']), $feeAmt, 'Balance amount is not proper');
@@ -180,7 +180,7 @@ class CRM_Event_BAO_AdditionalPaymentTest extends CiviUnitTestCase {
     $form->testSubmit($submitParams);
 
     // check payment info again and see if the payment is completed
-    $paymentInfo = CRM_Contribute_BAO_Contribution::getPaymentInfo($result['participant']['id'], 'event');
+    $paymentInfo = api_v3_ParticipantPaymentTest::getPaymentInfo($result['participant']['id']);
     $this->assertEquals(round($paymentInfo['total']), $feeAmt, 'Total amount recorded is not proper');
     $this->assertEquals(round($paymentInfo['paid']), $feeAmt, 'Amount paid is not proper');
     $this->assertEquals(round($paymentInfo['balance']), 0, 'Balance amount is not proper');
@@ -188,6 +188,7 @@ class CRM_Event_BAO_AdditionalPaymentTest extends CiviUnitTestCase {
 
     $this->callAPISuccess('OptionValue', 'delete', ['id' => $paymentInstrumentID]);
   }
+
 
   /**
    * CRM-13964
@@ -197,7 +198,7 @@ class CRM_Event_BAO_AdditionalPaymentTest extends CiviUnitTestCase {
     $amtPaid = 60;
     $balance = $feeAmt - $amtPaid;
     $result = $this->addParticipantWithPayment($feeAmt, $amtPaid);
-    $paymentInfo = CRM_Contribute_BAO_Contribution::getPaymentInfo($result['participant']['id'], 'event');
+    $paymentInfo = api_v3_ParticipantPaymentTest::getPaymentInfo($result['participant']['id']);
 
     // amount checking
     $this->assertEquals(round($paymentInfo['total']), $feeAmt, 'Total amount recorded is not proper');
@@ -235,7 +236,7 @@ class CRM_Event_BAO_AdditionalPaymentTest extends CiviUnitTestCase {
       'participant_id' => $result['participant']['id'],
       'payment_instrument_id' => 3,
     ]);
-    $paymentInfo = CRM_Contribute_BAO_Contribution::getPaymentInfo($result['participant']['id'], 'event', TRUE);
+    $paymentInfo = api_v3_ParticipantPaymentTest::getPaymentInfo($result['participant']['id'], TRUE);
     $transaction = $paymentInfo['transaction'];
 
     //Assert all transaction(owed and refund) are listed on view payments.
