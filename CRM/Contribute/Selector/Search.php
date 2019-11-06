@@ -503,7 +503,7 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
     $pre = [];
     self::$_columnHeaders = [
       [
-        'name' => $this->_includeSoftCredits ? ts('Contribution Amount') : ts('Amount'),
+        'name' => ts('Total'),
         'sort' => 'total_amount',
         'direction' => CRM_Utils_Sort::DONTCARE,
         'field_name' => 'total_amount',
@@ -515,7 +515,7 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
           self::$_columnHeaders,
           [
             [
-              'name' => ts('Soft Credit Amount'),
+              'name' => ts('Soft Credit'),
               'sort' => 'contribution_soft_credit_amount',
               'field_name' => 'contribution_soft_credit_amount',
               'direction' => CRM_Utils_Sort::DONTCARE,
