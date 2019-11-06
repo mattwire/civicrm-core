@@ -354,15 +354,11 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
       }
     }
 
-    // get all contribution status
-    $contributionStatuses = CRM_Core_OptionGroup::values('contribution_status',
-      FALSE, FALSE, FALSE, NULL, 'name', FALSE
-    );
-
     //get all campaigns.
     $allCampaigns = CRM_Campaign_BAO_Campaign::getCampaigns(NULL, NULL, FALSE, FALSE, FALSE, TRUE);
 
     while ($result->fetch()) {
+      $row['contribution_status_name'] = CRM_Core_PseudoConstant::getName('CRM_Contribute_BAO_Contribution', 'contribution_status_id', $result->contribution_status_id);
       $this->_query->convertToPseudoNames($result);
       $links = self::links($componentId,
           $componentAction,
@@ -403,34 +399,33 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
         }
       }
 
+      $row['paid_amount'] = CRM_Utils_Money::subtractCurrencies($row['total_amount'], CRM_Contribute_BAO_Contribution::getContributionBalance($row['contribution_id']), $row['currency']);
+
       //carry campaign on selectors.
       // @todo - I can't find any evidence that 'carrying' the campaign on selectors actually
       // results in it being displayed anywhere so why do we do this???
       $row['campaign'] = CRM_Utils_Array::value($result->contribution_campaign_id, $allCampaigns);
       $row['campaign_id'] = $result->contribution_campaign_id;
 
-      // add contribution status name
-      $row['contribution_status_name'] = CRM_Utils_Array::value($row['contribution_status_id'],
-        $contributionStatuses
-      );
-
       $isPayLater = FALSE;
-      if ($result->is_pay_later && CRM_Utils_Array::value('contribution_status_name', $row) == 'Pending') {
-        $isPayLater = TRUE;
-        $row['contribution_status'] .= ' (' . ts('Pay Later') . ')';
-        $links[CRM_Core_Action::ADD] = [
-          'name' => ts('Pay with Credit Card'),
-          'url' => 'civicrm/contact/view/contribution',
-          'qs' => 'reset=1&action=update&id=%%id%%&cid=%%cid%%&context=%%cxt%%&mode=live',
-          'title' => ts('Pay with Credit Card'),
-        ];
-      }
-      elseif (CRM_Utils_Array::value('contribution_status_name', $row) == 'Pending') {
-        $row['contribution_status'] .= ' (' . ts('Incomplete Transaction') . ')';
+      if ($row['contribution_status_name'] === 'Pending') {
+        if ($result->is_pay_later) {
+          $isPayLater = TRUE;
+          $row['contribution_status'] .= ' (' . ts('Pay Later') . ')';
+          $links[CRM_Core_Action::ADD] = [
+            'name' => ts('Pay with Credit Card'),
+            'url' => 'civicrm/contact/view/contribution',
+            'qs' => 'reset=1&action=update&id=%%id%%&cid=%%cid%%&context=%%cxt%%&mode=live',
+            'title' => ts('Pay with Credit Card'),
+          ];
+        }
+        else {
+          $row['contribution_status'] .= ' (' . ts('Incomplete Transaction') . ')';
+        }
       }
 
       if ($row['is_test']) {
-        $row['financial_type'] = $row['financial_type'] . ' (' . ts('test') . ')';
+        $row['financial_type'] = CRM_Core_TestEntity::appendTestText($row['financial_type']);
       }
 
       $row['checkbox'] = CRM_Core_Form::CB_PREFIX . $result->contribution_id;
@@ -443,7 +438,7 @@ class CRM_Contribute_Selector_Search extends CRM_Core_Selector_Base implements C
 
       if (in_array($row['contribution_status_name'], ['Partially paid', 'Pending refund']) || $isPayLater) {
         $buttonName = ts('Record Payment');
-        if ($row['contribution_status_name'] == 'Pending refund') {
+        if ($row['contribution_status_name'] === 'Pending refund') {
           $buttonName = ts('Record Refund');
         }
         elseif (CRM_Core_Config::isEnabledBackOfficeCreditCardPayments()) {
