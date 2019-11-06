@@ -87,7 +87,6 @@ class CRM_Contribute_Form_ContributionView extends CRM_Core_Form {
     elseif ($this->isViewContext()) {
       $this->assign('noACL', TRUE);
     }
-    CRM_Contribute_BAO_Contribution::resolveDefaults($values);
 
     if (!empty($values['contribution_page_id'])) {
       $contribPages = CRM_Contribute_PseudoConstant::contributionPage(NULL, TRUE);
