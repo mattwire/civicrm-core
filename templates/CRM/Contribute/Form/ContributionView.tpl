@@ -124,12 +124,6 @@
       <td>{$fee_amount|crmMoney:$currency}</td>
     </tr>
   {/if}
-  {if $net_amount}
-    <tr>
-      <td class="label">{ts}Net Amount{/ts}</td>
-      <td>{$net_amount|crmMoney:$currency}</td>
-    </tr>
-  {/if}
   {if $isDeferred AND $revenue_recognition_date}
     <tr>
       <td class="label">{ts}Revenue Recognition Date{/ts}</td>
