@@ -121,7 +121,7 @@
   {if $fee_amount}
     <tr>
       <td class="label">{ts}Fee Amount{/ts}</td>
-      <td>{$fee_amount|crmMoney:$currency}</td>
+      <td>{$fee_amount|crmMoney:$currency}{if $paymentInfo.fee_paid} (Paid: {$paymentInfo.fee_paid|crmMoney:$currency}){/if}</td>
     </tr>
   {/if}
   {if $isDeferred AND $revenue_recognition_date}

@@ -4088,6 +4088,7 @@ INNER JOIN civicrm_activity ON civicrm_activity_contact.activity_id = civicrm_ac
     $info['total'] = $total;
     $info['paid'] = $total - $paymentBalance;
     $info['balance'] = $paymentBalance;
+    $info['fee_paid'] = 0;
     $info['id'] = $id;
     $info['component'] = $component;
     $rows = [];
@@ -4095,7 +4096,7 @@ INNER JOIN civicrm_activity ON civicrm_activity_contact.activity_id = civicrm_ac
       // Need to exclude fee trxn rows so filter out rows where TO FINANCIAL ACCOUNT is expense account
       $sql = "
         SELECT GROUP_CONCAT(fa.`name`) as financial_account,
-          ft.total_amount,
+          ft.total_amount, ft.fee_amount,
           ft.payment_instrument_id,
           ft.trxn_date, ft.trxn_id, ft.order_reference, ft.status_id, ft.check_number, ft.currency, ft.pan_truncation, ft.card_type_id, ft.id
 
@@ -4153,6 +4154,7 @@ INNER JOIN civicrm_activity ON civicrm_activity_contact.activity_id = civicrm_ac
         $val = [
           'id' => $resultDAO->id,
           'total_amount' => $resultDAO->total_amount,
+          'fee_amount' => $resultDAO->fee_amount,
           'financial_type' => $resultDAO->financial_account,
           'payment_instrument' => $paidByLabel,
           'receive_date' => $resultDAO->trxn_date,
@@ -4165,6 +4167,7 @@ INNER JOIN civicrm_activity ON civicrm_activity_contact.activity_id = civicrm_ac
         if ($paidByName == 'Check') {
           $val['check_number'] = $resultDAO->check_number;
         }
+        $info['fee_paid'] += $resultDAO->fee_amount;
         $rows[] = $val;
       }
       $info['transaction'] = $rows;
