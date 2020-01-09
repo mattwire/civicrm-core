@@ -200,7 +200,7 @@ class CRM_PCP_Page_PCPInfo extends CRM_Core_Page {
     $totalAmount = CRM_PCP_BAO_PCP::thermoMeter($this->_id);
     $achieved = round($totalAmount / $pcpInfo['goal_amount'] * 100, 2);
 
-    if ($pcpBlock->is_active == 1) {
+    if (($pcpBlock->is_active == 1) && (CRM_Core_Permission::check('create personal campaign pages'))) {
       $linkTextUrl = CRM_Utils_System::url('civicrm/contribute/campaign',
         "action=add&reset=1&pageId={$pcpInfo['page_id']}&component={$pcpInfo['page_type']}",
         TRUE, NULL, TRUE,

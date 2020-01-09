@@ -407,11 +407,13 @@ WHERE pcp.id = %1 AND cc.contribution_status_id = %2 AND cc.is_test = 0";
     );
     $form->addRule('tellfriend_limit', ts('Please enter a valid limit.'), 'integer');
 
-    $form->add('text',
-      'link_text',
-      ts("'Create Personal Campaign Page' link text"),
-      CRM_Core_DAO::getAttribute('CRM_PCP_DAO_PCPBlock', 'link_text')
-    );
+    if (CRM_Core_Permission::check('create personal campaign pages')) {
+      $form->add('text',
+        'link_text',
+        ts("'Create Personal Campaign Page' link text"),
+        CRM_Core_DAO::getAttribute('CRM_PCP_DAO_PCPBlock', 'link_text')
+      );
+    }
 
     $form->add('text', 'notify_email', ts('Notify Email'), CRM_Core_DAO::getAttribute('CRM_PCP_DAO_PCPBlock', 'notify_email'));
   }

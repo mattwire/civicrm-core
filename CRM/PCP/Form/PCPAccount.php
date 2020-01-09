@@ -54,6 +54,9 @@ class CRM_PCP_Form_PCPAccount extends CRM_Core_Form {
   }
 
   public function preProcess() {
+    if (!CRM_Core_Permission::check('create personal campaign pages')) {
+      CRM_Core_Error::statusBounce(ts('You do not have permission to access this page.'));
+    }
     $session = CRM_Core_Session::singleton();
     $config = CRM_Core_Config::singleton();
     $this->_action = CRM_Utils_Request::retrieve('action', 'String', $this, FALSE);

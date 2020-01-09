@@ -69,6 +69,9 @@ class CRM_Contribute_Info extends CRM_Core_Component_Info {
         'label' => ts('delete in CiviContribute'),
         'description' => ts('Delete contributions'),
       ],
+      'create personal campaign pages' => [
+        ts('Create a Personal Campaign Page'),
+      ],
     ];
     return $permissions;
   }
