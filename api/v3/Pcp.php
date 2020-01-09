@@ -26,6 +26,12 @@
  * @return array api result array
  */
 function civicrm_api3_pcp_create($params) {
+  if (empty($params['id'])) {
+    if (!CRM_Core_Permission::check('create personal campaign pages')) {
+      throw new \Civi\API\Exception\UnauthorizedException("Cannot create new Personal Campaign Page. Required permission: 'create personal campaign pages'");
+    }
+  }
+
   return _civicrm_api3_basic_create(_civicrm_api3_get_BAO(__FUNCTION__), $params, 'Pcp');
 }
 

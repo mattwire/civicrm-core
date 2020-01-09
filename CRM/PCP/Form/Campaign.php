@@ -26,6 +26,10 @@ class CRM_PCP_Form_Campaign extends CRM_Core_Form {
    * Pre-process form.
    */
   public function preProcess() {
+    if (!CRM_Core_Permission::check('create personal campaign pages')) {
+      CRM_Core_Error::statusBounce(ts('You do not have permission to access this page.'));
+    }
+
     // we do not want to display recently viewed items, so turn off
     $this->assign('displayRecent', FALSE);
 

@@ -82,6 +82,9 @@ class CRM_Contribute_Info extends CRM_Core_Component_Info {
         ts('delete in CiviContribute'),
         ts('Delete contributions'),
       ],
+      'create personal campaign pages' => [
+        ts('Create a Personal Campaign Page'),
+      ],
     ];
 
     if (!$descriptions) {
