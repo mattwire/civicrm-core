@@ -190,8 +190,15 @@ class CRM_Event_Form_Registration_ThankYou extends CRM_Event_Form_Registration {
     }
     $this->assign('isOnWaitlist', $isOnWaitlist);
     $this->assign('isRequireApproval', $isRequireApproval);
-    $this->assign('pcpLink', $this->getPCPBlockID() ? CRM_Utils_System::url('civicrm/contribute/campaign', 'action=add&reset=1&pageId=' . $this->getEventID() . '&component=event') : NULL);
-    $this->assign('pcpLinkText', $this->getPCPBlockID() ? $this->getPCPBlockValue('link_text') : NULL);
+
+    if (!CRM_Core_Permission::check('create personal campaign pages')) {
+      $this->assign('pcpLink', $this->getPCPBlockID() ? CRM_Utils_System::url('civicrm/contribute/campaign', 'action=add&reset=1&pageId=' . $this->getEventID() . '&component=event') : NULL);
+      $this->assign('pcpLinkText', $this->getPCPBlockID() ? $this->getPCPBlockValue('link_text') : NULL);
+    }
+    else {
+      $this->assign('pcpLink', '');
+      $this->assign('pcpLinkText', '');
+    }
 
     // Assign Participant Count to Lineitem Table
     $this->assign('pricesetFieldsCount', CRM_Price_BAO_PriceSet::getPricesetCount($this->_priceSetId));
