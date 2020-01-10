@@ -435,14 +435,16 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form {
       $this->_pcpInfo = $pcp['pcpInfo'];
     }
 
-    // Link (button) for users to create their own Personal Campaign page
-    if ($linkText = CRM_PCP_BAO_PCP::getPcpBlockStatus($this->_id, 'contribute')) {
-      $linkTextUrl = CRM_Utils_System::url('civicrm/contribute/campaign',
-        "action=add&reset=1&pageId={$this->_id}&component=contribute",
-        FALSE, NULL, TRUE
-      );
-      $this->assign('linkTextUrl', $linkTextUrl);
-      $this->assign('linkText', $linkText);
+    if (CRM_Core_Permission::check('create personal campaign pages')) {
+      // Link (button) for users to create their own Personal Campaign page
+      if ($linkText = CRM_PCP_BAO_PCP::getPcpBlockStatus($this->_id, 'contribute')) {
+        $linkTextUrl = CRM_Utils_System::url('civicrm/contribute/campaign',
+          "action=add&reset=1&pageId={$this->_id}&component=contribute",
+          FALSE, NULL, TRUE
+        );
+        $this->assign('linkTextUrl', $linkTextUrl);
+        $this->assign('linkText', $linkText);
+      }
     }
 
     //set pledge block if block id is set
