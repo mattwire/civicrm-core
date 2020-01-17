@@ -45,10 +45,14 @@ class CRM_PCP_Page_PCP extends CRM_Core_Page_Basic {
    */
   public function &links() {
     if (!(self::$_links)) {
-      // helper variable for nicer formatting
-      $deleteExtra = ts('Are you sure you want to delete this Campaign Page ?');
-
       self::$_links = [
+        CRM_Core_Action::VIEW => [
+          'name' => ts('View'),
+          'url' => 'civicrm/pcp/info',
+          'qs' => 'reset=1&id=%%id%%',
+          'title' => ts('View Personal Campaign Page'),
+          'fe' => TRUE,
+        ],
         CRM_Core_Action::UPDATE => [
           'name' => ts('Edit'),
           'url' => 'civicrm/pcp/info',
@@ -74,7 +78,7 @@ class CRM_PCP_Page_PCP extends CRM_Core_Page_Basic {
           'name' => ts('Delete'),
           'url' => 'civicrm/admin/pcp',
           'qs' => 'action=delete&id=%%id%%',
-          'extra' => 'onclick = "return confirm(\'' . $deleteExtra . '\');"',
+          'extra' => 'onclick = "return confirm(\'' . ts('Are you sure you want to delete this Campaign Page ?') . '\');"',
           'title' => ts('Delete Personal Campaign Page'),
           'weight' => CRM_Core_Action::getWeight(CRM_Core_Action::DELETE),
         ],
@@ -286,10 +290,14 @@ class CRM_PCP_Page_PCP extends CRM_Core_Page_Basic {
 
       if ($pcp->page_type == 'contribute') {
         $pageUrl = CRM_Utils_System::url('civicrm/' . $page_type . '/transact', 'reset=1&id=' . $pcp->page_id);
+        $pageEditUrl = CRM_Utils_System::url('civicrm/admin/contribute/settings', 'reset=1&action=update&id=' . $pcp->page_id);
       }
       else {
-        $pageUrl = CRM_Utils_System::url('civicrm/' . $page_type . '/register', 'reset=1&id=' . $pcp->page_id);
+        $pageUrl = CRM_Utils_System::url('civicrm/' . $page_type . '/register', 'reset=1&id=' . $pcp->page_id, FALSE, NULL, TRUE, TRUE);
+        $pageEditUrl = CRM_Utils_System::url('civicrm/event/manage/settings', 'reset=1&action=update&id=' . $pcp->page_id);
       }
+      $pcpEditUrl = CRM_Utils_System::url('civicrm/pcp/info', 'reset=1&action=update&context=dashboard&id=' . $pcp->id);
+      $pcpViewUrl = CRM_Utils_System::url('civicrm/pcp/info', 'reset=1&id=' . $pcp->id, FALSE, NULL, TRUE, TRUE);
 
       $pcpSummary[$pcp->id] = [
         'id' => $pcp->id,
@@ -301,11 +309,14 @@ class CRM_PCP_Page_PCP extends CRM_Core_Page_Basic {
         'page_id' => $page_id,
         'page_title' => $title,
         'page_url' => $pageUrl,
+        'page_edit_url' => $pageEditUrl,
         'page_type' => $page_type,
         'action' => CRM_Core_Action::formLink($this->links(), $action,
           ['id' => $pcp->id], ts('more'), FALSE, 'contributionpage.pcp.list', 'PCP', $pcp->id
         ),
         'title' => $pcp->title,
+        'pcp_view_url' => $pcpViewUrl,
+        'pcp_edit_url' => $pcpEditUrl,
         'class' => $class,
       ];
     }
