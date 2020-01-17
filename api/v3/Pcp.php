@@ -69,3 +69,37 @@ function civicrm_api3_pcp_get($params) {
 function civicrm_api3_pcp_delete($params) {
   return _civicrm_api3_basic_delete(_civicrm_api3_get_BAO(__FUNCTION__), $params);
 }
+
+/**
+ * Adjust metadata for clone spec action.
+ *
+ * @param array $spec
+ */
+function _civicrm_api3_pcp_clone_spec(&$spec) {
+  $spec['id']['title'] = 'PCP ID to clone';
+  $spec['id']['type'] = CRM_Utils_Type::T_INT;
+  $spec['id']['api.required'] = 1;
+  $spec['is_active']['title'] = 'PCP page is Active (Default FALSE)?';
+  $spec['is_active']['type'] = CRM_Utils_Type::T_BOOLEAN;
+  $spec['is_active']['api.default'] = FALSE;
+}
+
+/**
+ * Clone Job.
+ *
+ * @param array $params
+ *
+ * @return array
+ * @throws \API_Exception
+ * @throws \CiviCRM_API3_Exception
+ */
+function civicrm_api3_pcp_clone($params) {
+  $params['is_active'] ?? $params['is_active'] = FALSE;
+  if (empty($params['id'])) {
+    throw new API_Exception("Mandatory key(s) missing from params array: id field is required");
+  }
+  $id = $params['id'];
+  unset($params['id']);
+  $newDAO = CRM_PCP_BAO_PCP::copy($id, $params);
+  return civicrm_api3('Pcp', 'getsingle', ['id' => $newDAO->id]);
+}

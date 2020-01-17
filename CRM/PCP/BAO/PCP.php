@@ -968,4 +968,25 @@ INNER JOIN civicrm_uf_group ufgroup
     return CRM_Core_PseudoConstant::getLabel('CRM_Event_BAO_Participant', 'event_id', $id);
   }
 
+  /**
+   * Make a copy of a Job.
+   *
+   * @param int $id The job id to copy.
+   * @param array $params
+   * @return CRM_Core_DAO
+   */
+  public static function copy($id, $params = []) {
+    $fieldsFix = [
+      'suffix' => [
+        'title' => ' - ' . ts('Copy'),
+      ],
+      'replace' => $params,
+    ];
+    $copy = CRM_Core_DAO::copyGeneric('CRM_PCP_BAO_PCP', ['id' => $id], NULL, $fieldsFix);
+    $copy->save();
+    CRM_Utils_Hook::copy('Pcp', $copy);
+
+    return $copy;
+  }
+
 }
