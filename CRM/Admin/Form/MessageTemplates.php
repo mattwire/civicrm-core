@@ -171,8 +171,17 @@ class CRM_Admin_Form_MessageTemplates extends CRM_Core_Form {
     );
 
     //get the tokens.
-    $tokens = CRM_Core_SelectValues::contactTokens();
-    $tokens = array_merge($tokens, CRM_Core_SelectValues::domainTokens());
+    $tokens = array_merge(
+      CRM_Core_SelectValues::activityTokens(),
+      CRM_Core_SelectValues::caseTokens(),
+      CRM_Core_SelectValues::contactTokens(),
+      CRM_Core_SelectValues::contributionTokens(),
+      CRM_Core_SelectValues::eventTokens(),
+      CRM_Core_SelectValues::mailingTokens(),
+      CRM_Core_SelectValues::membershipTokens(),
+      CRM_Core_SelectValues::participantTokens(),
+      CRM_Core_SelectValues::domainTokens()
+    );
 
     $this->assign('tokens', CRM_Utils_Token::formatTokensForDisplay($tokens));
 
