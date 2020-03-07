@@ -90,12 +90,15 @@ class CRM_Member_ActionMapping extends \Civi\ActionSchedule\Mapping {
       $query['casDateField'] = 'e.' . $query['casDateField'];
     }
 
-    // FIXME: Numbers should be constants.
-    if (in_array(2, $selectedStatuses)) {
+    $autoRenewOptions = \CRM_Core_OptionGroup::values('auto_renew_options', TRUE, FALSE, FALSE, NULL, 'name');
+    if (in_array($autoRenewOptions['Auto-renew Memberships Only'], $selectedStatuses)) {
       //auto-renew memberships
       $query->where("e.contribution_recur_id IS NOT NULL");
+      $query->join('crecur', "LEFT JOIN civicrm_contribution_recur crecur ON crecur.id = e.contribution_recur_id");
+      $query->where("crecur.contribution_status_id IN (@inactiveStatuses)")->param([
+        '@inactiveStatuses' => array_keys(CRM_Contribute_BAO_ContributionRecur::getInactiveStatuses())]);
     }
-    elseif (in_array(1, $selectedStatuses)) {
+    elseif (in_array($autoRenewOptions['Renewal Reminder (non-auto-renew memberships only)'], $selectedStatuses)) {
       $query->where("e.contribution_recur_id IS NULL");
     }
 

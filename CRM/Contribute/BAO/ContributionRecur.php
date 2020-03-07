@@ -951,7 +951,8 @@ INNER JOIN civicrm_contribution       con ON ( con.id = mp.contribution_id )
    * @return array
    */
   public static function getInactiveStatuses() {
-    return ['Cancelled', 'Failed', 'Completed'];
+    $contributionRecurStatuses = CRM_Contribute_BAO_ContributionRecur::buildOptions('contribution_status_id', 'validate');
+    return array_intersect($contributionRecurStatuses, ['Cancelled', 'Failed', 'Completed']);
   }
 
   /**
