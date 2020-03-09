@@ -25,6 +25,13 @@ class CRM_Contribute_Form_CancelSubscription extends CRM_Contribute_Form_Contrib
   protected $_mode = NULL;
 
   /**
+   * @var string The contributor email
+   */
+  protected $_donorEmail = NULL;
+
+
+
+  /**
    * Should custom data be suppressed on this form.
    *
    * We override to suppress custom data because historically it has not been
@@ -159,7 +166,7 @@ class CRM_Contribute_Form_CancelSubscription extends CRM_Contribute_Form_Contrib
     $this->assign('cancelSupported', $cancelSupported);
 
     if ($this->_donorEmail) {
-      $this->add('checkbox', 'is_notify', ts('Notify Contributor?'));
+      $this->add('checkbox', 'is_notify', ts('Notify Contributor?') . " ({$this->_donorEmail})");
     }
     if ($this->_mid) {
       $cancelButton = ts('Cancel Automatic Membership Renewal');
