@@ -211,4 +211,12 @@
 {crmRegion name="billing-block-post"}
   {* Payment processors sometimes need to append something to the end of the billing block. We create a region for
      clarity  - the plan is to move to assigning this through the payment processor to this region *}
+{if $is_monetary and $form.bank_account_number}
+  <div id="payment_notice">
+    <fieldset class="crm-public-form-item crm-group payment_notice-group">
+      <legend>{ts}Agreement{/ts}</legend>
+      {ts}Your account data will be used to charge your bank account via direct debit. While submitting this form you agree to the charging of your bank account via direct debit.{/ts}
+    </fieldset>
+  </div>
+{/if}
 {/crmRegion}
