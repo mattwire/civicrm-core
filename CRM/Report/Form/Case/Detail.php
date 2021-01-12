@@ -134,23 +134,6 @@ class CRM_Report_Form_Case_Detail extends CRM_Report_Form {
           ],
         ],
       ],
-      'civicrm_contact' => [
-        'dao' => 'CRM_Contact_DAO_Contact',
-        'fields' => [
-          'client_sort_name' => [
-            'name' => 'sort_name',
-            'title' => ts('Client Name'),
-            'required' => TRUE,
-          ],
-          'id' => [
-            'no_display' => TRUE,
-            'required' => TRUE,
-          ],
-        ],
-        'filters' => [
-          'sort_name' => ['title' => ts('Client Name')],
-        ],
-      ],
       'civicrm_relationship' => [
         'dao' => 'CRM_Contact_DAO_Relationship',
         'fields' => [
@@ -292,6 +275,17 @@ class CRM_Report_Form_Case_Detail extends CRM_Report_Form {
         ],
       ],
     ];
+
+    $this->_columns = array_merge(
+      $this->getColumns('Contact', [
+        'order_bys_defaults' => ['sort_name' => 'ASC'],
+        'fields_defaults' => ['sort_name'],
+        'fields_excluded' => ['id'],
+        'fields_required' => ['id'],
+        'filters_defaults' => ['is_deleted' => 0],
+      ]),
+      $this->_columns
+    );
 
     $this->_options = [
       'my_cases' => [
