@@ -208,6 +208,15 @@ class CRM_Contribute_Form_ContributionBase extends CRM_Core_Form {
   public $paymentInstrumentID;
 
   /**
+   * The contribution ID
+   * @fixme this is retrieved as a URL param. I think it is only set when using the contribution page in "invoice"
+   * mode.
+   *
+   * @var int
+   */
+  protected $_ccid;
+
+  /**
    * Is the price set quick config.
    * @return bool
    */
