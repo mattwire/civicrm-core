@@ -535,17 +535,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
       $separateMembershipPayment = $this->_membershipBlock['is_separate_payment'] ?? NULL;
 
       if ($membershipPriceset) {
-        foreach ($this->_priceSet['fields'] as $pField) {
-          if (empty($pField['options'])) {
-            continue;
-          }
-          foreach ($pField['options'] as $opId => $opValues) {
-            if (empty($opValues['membership_type_id'])) {
-              continue;
-            }
-            $membershipTypeIds[$opValues['membership_type_id']] = $opValues['membership_type_id'];
-          }
-        }
+        $membershipTypeIds = $this->_priceSet['membership_type_ids'] ?? [];
       }
       elseif (!empty($this->_membershipBlock['membership_types'])) {
         $membershipTypeIds = explode(',', $this->_membershipBlock['membership_types']);
@@ -564,7 +554,6 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
         }
 
         $membershipTypeValues = CRM_Member_BAO_Membership::buildMembershipTypeValues($this, $membershipTypeIds);
-        $this->_membershipTypeValues = $membershipTypeValues;
         $endDate = NULL;
 
         // Check if we support auto-renew on this contribution page
@@ -597,22 +586,7 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
               $membershipTypes[] = $memType;
             }
           }
-          elseif ($memType['is_active']) {
-
-            if ($allowAutoRenewOpt) {
-              $javascriptMethod = ['onclick' => "return showHideAutoRenew( this.value );"];
-              $isAvailableAutoRenew = $this->_membershipBlock['auto_renew'][$value] ?? 1;
-              $autoRenewMembershipTypeOptions["autoRenewMembershipType_{$value}"] = (int) $memType['auto_renew'] * $isAvailableAutoRenew;
-              $allowAutoRenewMembership = TRUE;
-            }
-            else {
-              $javascriptMethod = NULL;
-              $autoRenewMembershipTypeOptions["autoRenewMembershipType_{$value}"] = 0;
-            }
-
-            //add membership type.
-            $radio[$memType['id']] = NULL;
-            $radioOptAttrs[$memType['id']] = $javascriptMethod;
+          else {
             if ($cid) {
               $membership = new CRM_Member_DAO_Membership();
               $membership->contact_id = $cid;
@@ -631,8 +605,6 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
 
               if ($membership->find(TRUE)) {
                 if (!$membership->end_date) {
-                  unset($radio[$memType['id']]);
-                  unset($radioOptAttrs[$memType['id']]);
                   $this->assign('islifetime', TRUE);
                   continue;
                 }
@@ -649,9 +621,42 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
                 }
               }
             }
-            $membershipTypes[] = $memType;
+
+            if ($memType['is_active']) {
+              if ($allowAutoRenewOpt) {
+                $javascriptMethod = ['onclick' => "return showHideAutoRenew( this.value );"];
+                $isAvailableAutoRenew = $this->_membershipBlock['auto_renew'][$value] ?? 1;
+                $autoRenewMembershipTypeOptions["autoRenewMembershipType_{$value}"] = (int) $memType['auto_renew'] * $isAvailableAutoRenew;
+                $allowAutoRenewMembership = TRUE;
+              }
+              else {
+                $javascriptMethod = NULL;
+                $autoRenewMembershipTypeOptions["autoRenewMembershipType_{$value}"] = 0;
+              }
+
+              //add membership type.
+              $radio[$memType['id']] = NULL;
+              $radioOptAttrs[$memType['id']] = $javascriptMethod;
+              $membershipTypes[] = $memType;
+            }
+            else {
+              unset($membershipTypeIds[$memType['id']]);
+              unset($membershipTypeValues[$memType['id']]);
+            }
           }
         }
+
+        if ($membershipPriceset) {
+          foreach ($this->_priceSet['fields'] as $pFieldID => $pField) {
+            foreach ($pField['options'] as $pFieldMembershipTypeID => $pFieldMembershipTypeDetail) {
+              if (!in_array($pFieldMembershipTypeDetail['membership_type_id'], $membershipTypeIds)) {
+                unset($this->_priceSet['fields'][$pFieldID]['options'][$pFieldMembershipTypeID]);
+              }
+            }
+          }
+        }
+
+        $this->_membershipTypeValues = $membershipTypeValues;
       }
 
       $this->assign('membershipBlock', $this->_membershipBlock);
@@ -706,6 +711,10 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
       }
 
     }
+
+    // When the priceset is initially built via CRM_Price_BAO_PriceSet::initSet it is copied to $this->_values['fee']
+    // As we may have modified it above to remove disabled membershipTypes we overwrite again here.
+    $this->_values['fee'] = $this->_priceSet['fields'];
 
     return $separateMembershipPayment;
   }

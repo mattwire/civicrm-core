@@ -600,7 +600,21 @@ WHERE  id = %1";
 
       $form->_priceSetId = $priceSetId;
       $priceSet = self::getSetDetail($priceSetId, $required, $validOnly);
+      // @fixme It would be nice to set the list of membership_type_ids when getting the options list for the
+      //   priceSet but that requires modifying CRM_Price_BAO_PriceField::getOptions() or using a different
+      //   function to get the priceSet. For now, we'll do it here.
+      foreach ($priceSet[$priceSetId]['fields'] as $fieldID => $fieldDetail) {
+        foreach ($fieldDetail['options'] as $pricesSetFieldOptionID => $priceSetFieldOptionDetail) {
+          if (!empty($priceSetFieldOptionDetail['membership_type_id'])) {
+            $membershipTypeIDs[$priceSetFieldOptionDetail['membership_type_id']] = $priceSetFieldOptionDetail['membership_type_id'];
+          }
+        }
+      }
       $form->_priceSet = $priceSet[$priceSetId] ?? NULL;
+      if ($form->_priceSet && isset($membershipTypeIDs)) {
+        // This allows us to easily check for a list of membershipTypes in use when building membership block etc.
+        $form->_priceSet['membership_type_ids'] = $membershipTypeIDs;
+      }
       $form->_values['fee'] = $form->_priceSet['fields'] ?? NULL;
 
       //get the price set fields participant count.
