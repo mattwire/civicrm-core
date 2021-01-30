@@ -827,8 +827,10 @@ WHERE  id = %1";
       $validFieldsOnly = FALSE;
     }
 
-    $priceSet = self::getSetDetail($priceSetId, TRUE, $validFieldsOnly);
-    $form->_priceSet = $priceSet[$priceSetId] ?? NULL;
+    if (!$form->_priceSet) {
+      $priceSet = self::getSetDetail($priceSetId, TRUE, $validFieldsOnly);
+      $form->_priceSet = $priceSet[$priceSetId] ?? NULL;
+    }
     $validPriceFieldIds = array_keys($form->_priceSet['fields']);
     $form->_quickConfig = $quickConfig = 0;
     if (CRM_Core_DAO::getFieldValue('CRM_Price_DAO_PriceSet', $priceSetId, 'is_quick_config')) {
