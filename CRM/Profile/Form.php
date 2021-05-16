@@ -271,6 +271,27 @@ class CRM_Profile_Form extends CRM_Core_Form {
   }
 
   /**
+   * Get the active UFGroups (profiles) on this form
+   *
+   * @return array
+   */
+  public function getUFGroupIDs() {
+    if (empty($this->_profileIds)) {
+      $this->_profileIds = $this->get('profileIds');
+    }
+    return $this->_profileIds;
+  }
+
+  /**
+   * Are we using the profile in create mode?
+   *
+   * @return bool
+   */
+  public function getIsCreateMode() {
+    return ($this->_mode == self::MODE_CREATE);
+  }
+
+  /**
    * Pre processing work done here.
    *
    * gets session variables for table name, id of entity in table, type of entity and stores them.

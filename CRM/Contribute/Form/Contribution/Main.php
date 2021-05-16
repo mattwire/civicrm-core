@@ -42,6 +42,30 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
   protected $_snippet;
 
   /**
+   * Get the active UFGroups (profiles) on this form
+   *
+   * @return array
+   */
+  public function getUFGroupIDs() {
+    $ufGroupIDs = [];
+    if (!empty($this->_values['custom_pre_id'])) {
+      $ufGroupIDs[] = $this->_values['custom_pre_id'];
+    }
+    if (!empty($this->_values['custom_post_id'])) {
+      // custom_post_id can be an array (because we can have multiple for events).
+      // It is handled as array for contribution page as well though they don't support multiple profiles.
+      if (!is_array($this->_values['custom_post_id'])) {
+        $ufGroupIDs[] = $this->_values['custom_post_id'];
+      }
+      else {
+        $ufGroupIDs = array_merge($ufGroupIDs, $this->_values['custom_post_id']);
+      }
+    }
+
+    return $ufGroupIDs;
+  }
+
+  /**
    * Set variables up before form is built.
    */
   public function preProcess() {

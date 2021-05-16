@@ -28,6 +28,21 @@ class CRM_Event_Form_Registration_AdditionalParticipant extends CRM_Event_Form_R
   public $additionalParticipantId = NULL;
 
   /**
+   * Get the active UFGroups (profiles) on this form
+   *
+   * @return array
+   */
+  public function getUFGroupIDs() {
+    $ufGroupIDs = [];
+    foreach (['pre', 'post'] as $keys) {
+      if (isset($this->_values['additional_custom_' . $keys . '_id'])) {
+        $ufGroupIDs[] = $this->_values['additional_custom_' . $keys . '_id'];
+      }
+    }
+    return $ufGroupIDs;
+  }
+
+  /**
    * Set variables up before form is built.
    *
    * @return void

@@ -152,6 +152,22 @@ class CRM_Campaign_Form_Petition_Signature extends CRM_Core_Form {
     return $session->get('userID');
   }
 
+  /**
+   * Get the active UFGroups (profiles) on this form
+   *
+   * @return array
+   */
+  public function getUFGroupIDs() {
+    $ufGroupIDs = [];
+    if (!empty($this->_contactProfileId)) {
+      $ufGroupIDs[] = $this->_contactProfileId;
+    }
+    if (!empty($this->_activityProfileId)) {
+      $ufGroupIDs[] = $this->_activityProfileId;
+    }
+    return $ufGroupIDs;
+  }
+
   public function preProcess() {
     $this->bao = new CRM_Campaign_BAO_Petition();
     $this->_mode = self::MODE_CREATE;
