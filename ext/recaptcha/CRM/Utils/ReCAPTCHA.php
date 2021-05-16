@@ -108,6 +108,84 @@ class CRM_Utils_ReCAPTCHA {
   }
 
   /**
+   * This checks the form criteria to see if reCAPTCHA should be added and then it adds it to the form if required.
+   *
+   * @param string $formName
+   * @param CRM_Core_Form $form
+   *
+   * @throws \API_Exception
+   * @throws \Civi\API\Exception\UnauthorizedException
+   */
+  public static function checkAndAddCaptchaToForm($formName, &$form) {
+    $addCaptcha = FALSE;
+    $ufGroupIDs = [];
+
+    switch ($formName) {
+      case 'CRM_Contribute_Form_Contribution_Main':
+        if (!CRM_Core_Session::getLoggedInContactID()) {
+          if (\Civi::settings()->get('forceRecaptcha')) {
+            $addCaptcha = TRUE;
+          }
+          else {
+            $ufGroupIDs = $form->getUFGroupIDs();
+          }
+        }
+        break;
+
+      case 'CRM_Mailing_Form_Subscribe':
+      case 'CRM_Event_Cart_Form_Checkout_Payment':
+        if (!CRM_Core_Session::getLoggedInContactID()) {
+          $addCaptcha = TRUE;
+        }
+        break;
+
+      case 'CRM_PCP_Form_PCPAccount':
+      case 'CRM_Campaign_Form_Petition_Signature':
+        if (!CRM_Core_Session::getLoggedInContactID()) {
+          $ufGroupIDs = $form->getUFGroupIDs();
+        }
+        break;
+
+      case 'CRM_Profile_Form':
+        // add captcha only for create mode.
+        if ($form->getIsCreateMode()) {
+          // suppress captcha for logged in users only
+          if (!CRM_Core_Session::getLoggedInContactID()) {
+            $ufGroupIDs = $form->getUFGroupIDs();
+          }
+        }
+        break;
+
+      case 'CRM_Event_Form_Registration_Register':
+      case 'CRM_Event_Form_Registration_AdditionalParticipant':
+        $button = substr($form->controller->getButtonName(), -4);
+        // We show reCAPTCHA for anonymous user if enabled.
+        // 'skip' button is on additional participant forms, we only show reCAPTCHA on the primary form.
+        if (!CRM_Core_Session::getLoggedInContactID() && ($button !== 'skip')) {
+          $ufGroupIDs = $form->getUFGroupIDs();
+        }
+        break;
+
+    }
+
+    if (!empty($ufGroupIDs) && empty($addCaptcha)) {
+      foreach ($ufGroupIDs as $ufGroupID) {
+        $addCaptcha = \Civi\Api4\UFGroup::get(FALSE)
+          ->addWhere('id', '=', $ufGroupID)
+          ->execute()
+          ->first()['add_captcha'];
+        if ($addCaptcha) {
+          break;
+        }
+      }
+    }
+
+    if ($addCaptcha) {
+      CRM_Utils_ReCAPTCHA::enableCaptchaOnForm($form);
+    }
+  }
+
+  /**
    * @param $value
    * @param CRM_Core_Form $form
    *
