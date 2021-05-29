@@ -275,7 +275,9 @@ class CRM_Profile_Form extends CRM_Core_Form {
    */
   public function getUFGroupIDs() {
     if (empty($this->_profileIds)) {
-      $this->_profileIds = $this->get('profileIds');
+      $dao = new CRM_Core_DAO_UFGroup();
+	    $dao->id = $this->_gid;
+      $this->_profileIds = (array) $dao;
     }
     return $this->_profileIds;
   }
