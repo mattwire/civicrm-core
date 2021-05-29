@@ -146,7 +146,7 @@ class CRM_Utils_ReCAPTCHA {
         }
         break;
 
-      case 'CRM_Profile_Form':
+      case 'CRM_Profile_Form_Edit':
         // add captcha only for create mode.
         if ($form->getIsCreateMode()) {
           // suppress captcha for logged in users only
@@ -157,7 +157,6 @@ class CRM_Utils_ReCAPTCHA {
         break;
 
       case 'CRM_Event_Form_Registration_Register':
-      case 'CRM_Event_Form_Registration_AdditionalParticipant':
         $button = substr($form->controller->getButtonName(), -4);
         // We show reCAPTCHA for anonymous user if enabled.
         // 'skip' button is on additional participant forms, we only show reCAPTCHA on the primary form.
