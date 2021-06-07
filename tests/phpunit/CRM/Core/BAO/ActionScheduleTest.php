@@ -960,9 +960,9 @@ class CRM_Core_BAO_ActionScheduleTest extends CiviUnitTestCase {
     ];
 
     // In this example, we test activity tokens
-    $activityTokens = '{activity.activity_id};;{activity.subject};;{activity.details};;{activity.activity_date_time}';
+    $activityTokens = '{activity.subject};;{activity.details};;{activity.activity_date_time}';
     $activity = $this->fixtures['phonecall'];
-    $activityTokensExpected = "9;;Phone call;;A phone call about a bear;;June 15th, 2012 10:00 AM";
+    $activityTokensExpected = "Phone call;;A phone call about a bear;;June 15th, 2012 10:00 AM";
     $cases[4] = [
       // Schedule definition.
       [
