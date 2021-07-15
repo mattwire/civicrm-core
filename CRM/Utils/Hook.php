@@ -2835,4 +2835,23 @@ abstract class CRM_Utils_Hook {
     );
   }
 
+  /**
+   * Allows an extension to override the checksum validation.
+   * For example you may want to invalidate checksums that were sent out/forwarded by mistake. You could also
+   * intercept and redirect to a different page in this case - eg. to say "sorry, you tried to use a compromised
+   * checksum".
+   *
+   * @param int $contactID
+   * @param string $checksum
+   * @param bool|null $isValid
+   *   Leave this at NULL to allow the core code to perform validation. Set to TRUE/FALSE to override validation.
+   */
+  public static function checksumValidate($contactID, $checksum, &$isValid) {
+    return self::singleton()->invoke(
+      ['contactID', 'checksum', 'isValid'],
+      $contactID, $checksum, $isValid, self::$_nullObject, self::$_nullObject,
+      self::$_nullObject, 'civicrm_checksumValidate'
+    );
+  }
+
 }

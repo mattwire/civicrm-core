@@ -202,6 +202,13 @@ WHERE  id IN ( $idString )
    * @throws \CRM_Core_Exception
    */
   public static function validChecksum($contactID, $inputCheck) {
+    // Allow a hook to perform (optional) checksum validation
+    // If $isValid is set to TRUE or FALSE then the hook handled the validation
+    $isValid = NULL;
+    CRM_Utils_Hook::checksumValidate($contactID, $inputCheck, $isValid);
+    if ($isValid !== NULL) {
+      return $isValid;
+    }
 
     $input = CRM_Utils_System::explode('_', $inputCheck, 3);
 
