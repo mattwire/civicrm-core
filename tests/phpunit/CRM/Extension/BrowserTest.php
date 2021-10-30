@@ -6,6 +6,31 @@
  */
 class CRM_Extension_BrowserTest extends CiviUnitTestCase {
 
+  use \Civi\Test\GuzzleTestTrait;
+
+  /**
+   * @var CRM_Extension_Browser
+   */
+  protected $browser;
+
+  /**
+   * Add a mock handler to the extension browser for testing.
+   *
+   * @param bool $error
+   *
+   * @throws \CiviCRM_API3_Exception
+   */
+  protected function setupMockHandler($error = FALSE): void {
+    // @todo Kartik setup required responses for tests
+    //   Load directly from dirname(__FILE__) . '/dataset/good-repository' ??
+    $responses = $error ? $this->getExpectedSinglePaymentErrorResponses() : $this->getExpectedSinglePaymentResponses();
+    // Comment the next line out when trying to capture the response.
+    // see https://github.com/civicrm/civicrm-core/pull/18350
+    $this->createMockHandler($responses);
+    $this->setUpClientWithHistoryContainer();
+    $this->browser->setGuzzleClient($this->getGuzzleClient());
+  }
+
   public function testDisabled() {
     $browser = new CRM_Extension_Browser(FALSE, '/index.html', 'file:///itd/oesn/tmat/ter');
     $this->assertEquals(FALSE, $browser->isEnabled());
@@ -28,10 +53,11 @@ class CRM_Extension_BrowserTest extends CiviUnitTestCase {
   }
 
   public function testGetExtensions_good() {
-    $browser = new CRM_Extension_Browser('file://' . dirname(__FILE__) . '/dataset/good-repository', NULL, $this->createTempDir('ext-cache-'));
-    $this->assertEquals(TRUE, $browser->isEnabled());
-    $this->assertEquals([], $browser->checkRequirements());
-    $exts = $browser->getExtensions();
+    $this->browser = new CRM_Extension_Browser('file://' . dirname(__FILE__) . '/dataset/good-repository', NULL, $this->createTempDir('ext-cache-'));
+    $this->setupMockHandler();
+    $this->assertEquals(TRUE, $this->browser->isEnabled());
+    $this->assertEquals([], $this->browser->checkRequirements());
+    $exts = $this->browser->getExtensions();
     $keys = array_keys($exts);
     sort($keys);
     $this->assertEquals(['test.crm.extension.browsertest.a', 'test.crm.extension.browsertest.b'], $keys);
