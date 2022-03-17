@@ -170,7 +170,7 @@ class CRM_Admin_Form_MessageTemplates extends CRM_Core_Form {
       CRM_Core_DAO::getAttribute('CRM_Core_DAO_MessageTemplate', 'msg_subject')
     );
 
-    $tokenProcessor = new TokenProcessor(Civi::dispatcher(), ['schema' => ['contactId']]);
+    $tokenProcessor = new TokenProcessor(Civi::dispatcher(), ['schema' => ['activityId', 'caseId', 'contactId', 'contributionId', 'eventId', 'participantId']]);
     $tokens = $tokenProcessor->listTokens();
 
     $this->assign('tokens', CRM_Utils_Token::formatTokensForDisplay($tokens));
