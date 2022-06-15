@@ -111,7 +111,7 @@ class CRM_Utils_Cache_SqlGroup implements CRM_Utils_Cache_Interface {
 
     $lock = Civi::lockManager()->acquire("cache.{$this->group}_{$key}._null");
     if (!$lock->isAcquired()) {
-      throw new \CRM_Utils_Cache_CacheException("SqlGroup: Failed to acquire lock on cache key.");
+      throw new \CRM_Utils_Cache_CacheException("SqlGroup: Failed to acquire lock on cache key: cache.{$this->group}_{$key}._null");
     }
 
     if (is_int($ttl) && $ttl <= 0) {
