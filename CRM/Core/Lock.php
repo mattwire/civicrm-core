@@ -31,7 +31,7 @@ class CRM_Core_Lock implements \Civi\Core\Lock\LockInterface {
   /**
    * lets have a 3 second timeout for now
    */
-  const TIMEOUT = 3;
+  const TIMEOUT = 5;
 
   /**
    * @var bool
