@@ -350,7 +350,7 @@ WHERE  log_date <= %1 AND id = %2 ORDER BY log_date DESC LIMIT 1";
     }
 
     // temp table to hold all altered contact-ids
-    $this->temporaryTable = CRM_Utils_SQL_TempTable::build()->setCategory('logsummary')->setMemory()->createwithColumns($tempColumns);
+    $this->temporaryTable = CRM_Utils_SQL_TempTable::build()->setCategory('logsummary')->createwithColumns($tempColumns);
     $this->addToDeveloperTab($this->temporaryTable->getCreateSql());
     $this->temporaryTableName = $this->temporaryTable->getName();
 
