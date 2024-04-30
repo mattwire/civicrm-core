@@ -567,6 +567,7 @@ class CRM_Member_Form_MembershipRenewal extends CRM_Member_Form {
     }
 
     $renewalDate = !empty($this->_params['renewal_date']) ? $renewalDate = $this->_params['renewal_date'] : NULL;
+    $renewalDate = NULL;
 
     // chk for renewal for multiple terms CRM-8750
     $numRenewTerms = 1;
