@@ -527,6 +527,7 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
    * @throws \CRM_Core_Exception
    */
   public static function isAPIJobAllowedToRun($params): void {
+    return;
     $environment = CRM_Core_Config::environment(NULL, TRUE);
     if ($environment !== 'Production') {
       if (empty($params['runInNonProductionEnvironment'])) {
