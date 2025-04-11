@@ -143,6 +143,9 @@ class AfformMetadataInjector {
       $fieldInfo['input_attrs']['placeholder'] = E::ts('Select');
     }
     elseif ($inputType === 'EntityRef' && empty($field['input_attrs']['placeholder'])) {
+      if (empty($fieldInfo['fk_entity'])) {
+        $fieldInfo['fk_entity'] = 'Event';
+      }
       $info = civicrm_api4('Entity', 'get', [
         'where' => [['name', '=', $fieldInfo['fk_entity']]],
         'checkPermissions' => FALSE,
