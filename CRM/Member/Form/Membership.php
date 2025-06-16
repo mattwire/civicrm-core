@@ -308,6 +308,8 @@ DESC limit 1");
     }
     $this->assign('endDate', $defaults['membership_end_date'] ?? NULL);
 
+    $defaults['contribution_status_id'] = CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'contribution_status_id', 'Pending');
+
     return $defaults;
   }
 
