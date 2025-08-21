@@ -967,12 +967,6 @@ class CRM_Contribute_Form_Contribution_Main extends CRM_Contribute_Form_Contribu
           $priceFieldIDS['id'] = $fields['priceSetId'];
           $self->set('memberPriceFieldIDS', $priceFieldIDS);
           $count = CRM_Price_BAO_PriceSet::getMembershipCount($ids);
-          foreach ($count as $id => $occurrence) {
-            if ($occurrence > 1) {
-              $errors['_qf_default'] = ts('You have selected multiple memberships for the same organization or entity. Please review your selections and choose only one membership per entity. Contact the site administrator if you need assistance.');
-              break;
-            }
-          }
         }
 
         if (empty($priceFieldMemTypes) && $self->_membershipBlock['is_required'] == 1) {
