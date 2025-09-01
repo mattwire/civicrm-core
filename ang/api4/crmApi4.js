@@ -17,7 +17,12 @@
       }
       p.then(
         function(result) {
-          deferred.resolve(result);
+          if (result.error_message) {
+            deferred.reject(result);
+          }
+          else {
+            deferred.resolve(result);
+          }
         },
         function(error) {
           deferred.reject(error);
