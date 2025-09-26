@@ -232,7 +232,7 @@ return [
     'parent_id' => [
       'title' => ts('Parent Activity ID'),
       'sql_type' => 'int unsigned',
-      'input_type' => NULL,
+      'input_type' => 'Number',
       'readonly' => TRUE,
       'description' => ts('Parent meeting ID (if this is a follow-up item).'),
       'add' => '1.1',

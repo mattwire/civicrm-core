@@ -15,6 +15,7 @@
  * @copyright CiviCRM LLC https://civicrm.org/licensing
  */
 
+use Civi\Api4\Activity;
 use Civi\Api4\Email;
 
 /**
@@ -86,6 +87,13 @@ trait CRM_Contact_Form_Task_EmailTrait {
 
   public $_caseId;
 
+  /**
+   * If we want to "reply" to an activity we specify an activityID to use.
+   *
+   * @var ?int
+   */
+  public ?int $replytoActivityID;
+
   public $_context;
 
   /**
@@ -137,6 +145,8 @@ trait CRM_Contact_Form_Task_EmailTrait {
     $this->setContactIDs();
     $this->assign('single', $this->_single);
     $this->assign('isAdmin', CRM_Core_Permission::check('administer CiviCRM'));
+
+    $this->replytoActivityID = CRM_Utils_Request::retrieve('activityid', 'Integer', $this, FALSE);
   }
 
   /**
@@ -321,6 +331,15 @@ trait CRM_Contact_Form_Task_EmailTrait {
     if (!Civi::settings()->get('allow_mail_from_logged_in_contact')) {
       $defaults['from_email_address'] = CRM_Core_BAO_Domain::getFromEmail();
     }
+
+    if (!empty($this->replytoActivityID)) {
+      $activity = Activity::get(FALSE)
+        ->addWhere('id', '=', $this->replytoActivityID)
+        ->execute()
+        ->first();
+      $defaults['subject'] = ts('Re: %1', [1 => $activity['subject']]);
+      $defaults['html_message'] = $activity['details'];
+    }
     return $defaults;
   }
 
@@ -402,6 +421,19 @@ trait CRM_Contact_Form_Task_EmailTrait {
       // has no meaning for followup activities, and this doesn't prevent
       // creating more manually if desired.
       $followupStatus = $this->createFollowUpActivities($formValues, $activityIds[0]);
+
+      if (!empty($this->replytoActivityID)) {
+        // Set the parent_id so we can link reply to original
+        // and status to Completed
+        Activity::update(FALSE)
+          ->addWhere('id', 'IN', $activityIds)
+          ->addValue('parent_id', $this->replytoActivityID)
+          ->execute();
+        Activity::update(FALSE)
+          ->addWhere('id', '=', $this->replytoActivityID)
+          ->addValue('status_id:name', 'Completed')
+          ->execute();
+      }
 
       CRM_Core_Session::setStatus(ts('One message was sent successfully. ', [
         'plural' => '%count messages were sent successfully. ',
