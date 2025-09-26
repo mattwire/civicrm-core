@@ -283,6 +283,17 @@ class CRM_Activity_Selector_Activity extends CRM_Core_Selector_Base implements C
       ];
     }
 
+    $actionLinks += [
+      CRM_Core_Action::
+      COPY => [
+        'name' => ts('Reply by email'),
+        'url' => 'civicrm/activity/email/add',
+        'qs' => "action=add&reset=1&cid=%%cid%%&atype={$activityTypeId}&activityid={$activityId}",
+        'title' => ts('Reply by email'),
+        'weight' => 120,
+      ],
+    ];
+
     return $actionLinks;
   }
 
