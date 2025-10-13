@@ -12,7 +12,7 @@
 
     // If no selectable fields or confirmation message, skip straight to processing
     if (!ctrl.apiBatch.confirmMsg && !ctrl.apiBatch.fields) {
-      ctrl.start(ctrl.apiBatch.params);
+      ctrl.start(ctrl.apiBatch.params, ctrl.task);
     }
 
     if (ctrl.apiBatch.fields) {
@@ -35,11 +35,19 @@
     }
 
     this.onSuccess = function(result) {
+      debugger;
       var entityTitle = this.getEntityTitle(result.batchCount);
       if (result.action === 'inlineEdit') {
         CRM.status(ts('Saved'));
       } else {
-        CRM.alert(ts(ctrl.apiBatch.successMsg, {1: result.batchCount, 2: entityTitle}), ts('%1 Complete', {1: ctrl.task.title}), 'success');
+        if (ctrl.apiBatch.successMsg) {
+          Swal.fire({
+            icon: 'success',
+            title: ts('%1 Complete', { 1: ctrl.task.title }),
+            text: ts(ctrl.apiBatch.successMsg, {1: result.batchCount, 2: entityTitle})
+          });
+        }
+        // CRM.alert(ts(ctrl.apiBatch.successMsg, {1: result.batchCount, 2: entityTitle}), ts('%1 Complete', {1: ctrl.task.title}), 'success');
       }
       this.close(result);
     };

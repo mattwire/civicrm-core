@@ -11,12 +11,16 @@
       displayCtrl: '<',
       isLink: '<',
       success: '&',
-      error: '&'
+      error: '&',
+      task: '<'
     },
-    templateUrl: '~/crmSearchTasks/crmSearchBatchRunner.html',
-    controller: function($scope, $timeout, $interval, crmApi4) {
+    // templateUrl: '~/crmSearchTasks/crmSearchBatchRunner.html',
+    controller: function($scope, $timeout, $interval, crmApi4, searchTaskBaseTrait) {
       const ts = $scope.ts = CRM.ts('org.civicrm.search_kit');
-      const ctrl = this;
+
+      // const ctrl = this
+
+      const ctrl = angular.extend(this, $scope.model, searchTaskBaseTrait);
 
       let currentBatch = 0;
       let totalBatches;
@@ -26,6 +30,8 @@
       let batchResult;
 
       this.progress = 0;
+
+      this.task = $scope.task;
 
       // Number of records to process in each batch
       const BATCH_SIZE = 500;
@@ -45,6 +51,14 @@
       };
 
       function runBatch() {
+        CRM.payment.swalFire({
+          title:  ts(ctrl.task.apiBatch.runTitle || ctrl.task.title || '', {1: ctrl.ids.length, 2: ctrl.entityTitle}),
+          text: ts(ctrl.task.apiBatch.runMsg || '', {1: ctrl.ids.length, 2: ctrl.entityTitle}),
+          allowOutsideClick: false,
+          willOpen: function () {
+            Swal.showLoading(Swal.getConfirmButton());
+          }
+        }, '', false);
         let entityName = ctrl.entity;
         let actionName = ctrl.action;
         ctrl.first = currentBatch * BATCH_SIZE;
@@ -91,13 +105,20 @@
                 // Return a complete record of all batches
                 batchResult.batchCount = processedCount;
                 batchResult.countMatched = countMatched;
+                CRM.payment.swalClose();
                 ctrl.success({result: batchResult});
               }, 500);
             } else {
               runBatch();
             }
           }, function(error) {
-            CRM.alert(error.error_message, ts('Error'), 'error');
+            // CRM.alert(error.error_message, ts('Error'), 'error');
+            debugger;
+            Swal.fire({
+              icon: 'error',
+              title: ts('Error'),
+              text: error.error_message
+            });
             ctrl.error();
           });
         // Move the bar every second to simulate progress between batches

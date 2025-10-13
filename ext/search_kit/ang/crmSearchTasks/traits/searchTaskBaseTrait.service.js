@@ -15,9 +15,10 @@
         return count === 1 ? this.entityInfo.title : this.entityInfo.title_plural;
       },
 
-      start: function(runParams) {
+      start: function(runParams, task) {
         $('.ui-dialog-titlebar button').hide();
         this.run = runParams || {};
+        this.task = task || {};
       },
 
       cancel: function() {
