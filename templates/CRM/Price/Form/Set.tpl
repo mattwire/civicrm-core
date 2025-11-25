@@ -24,15 +24,6 @@
            <td>&nbsp;</td>
            <td class="description">{ts}The name of this Price Set{/ts}
            </td>
-        <tr class="crm-price-set-form-block-extends">
-           <td class="label">{$form.extends.label}</td>
-           <td>
-           {if $extends eq false}
-              <div class="status message">{ts 1=$enableComponents}No Components have been enabled for your site that can be configured with the price sets. Click <a href='%1'>here</a> if you want to enable CiviEvent/CiviContribute for your site.{/ts}</div>
-          {else}
-              {$form.extends.html}
-          {/if}
-          </td>
         </tr>
         <tr class="crm-price-set-form-block-min_amount">
            <td class="label">{$form.min_amount.label}</td>

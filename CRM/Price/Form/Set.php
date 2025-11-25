@@ -113,11 +113,7 @@ class CRM_Price_Form_Set extends CRM_Core_Form {
    */
   public static function formRule($fields, $files, $options) {
     $errors = [];
-    $count = count($fields['extends'] ?? []);
-    //price sets configured for membership
-    if ($count > 1 && array_key_exists(CRM_Core_Component::getComponentID('CiviMember'), $fields['extends'])) {
-      $errors['extends'] = ts('If you plan on using this price set for membership signup and renewal, you can not also use it for Events or Contributions. However, a membership price set may include additional fields for non-membership options that require an additional fee (e.g. magazine subscription).');
-    }
+
     // Checks the given price set does not start with a digit
     if (strlen($fields['title']) && is_numeric($fields['title'][0])) {
       $errors['title'] = ts('Name cannot not start with a digit');
@@ -135,67 +131,6 @@ class CRM_Price_Form_Set extends CRM_Core_Form {
     $this->addRule('title', ts('Name already exists in Database.'),
       'objectExists', ['CRM_Price_DAO_PriceSet', $this->getEntityId(), 'title']
     );
-
-    $priceSetUsedTables = $extends = [];
-    if ($this->_action == CRM_Core_Action::UPDATE && $this->getEntityId()) {
-      $priceSetUsedTables = CRM_Price_BAO_PriceSet::getUsedBy($this->getEntityId(), 'table');
-    }
-
-    $enabledComponents = CRM_Core_Component::getEnabledComponents();
-
-    foreach ($enabledComponents as $name => $compObj) {
-      switch ($name) {
-        case 'CiviEvent':
-          $option = $this->createElement('checkbox', $compObj->componentID, NULL, ts('Event'));
-          if (!empty($priceSetUsedTables)) {
-            foreach (['civicrm_event', 'civicrm_participant'] as $table) {
-              if (in_array($table, $priceSetUsedTables)) {
-                $option->freeze();
-                break;
-              }
-            }
-          }
-          $extends[] = $option;
-          break;
-
-        case 'CiviContribute':
-          $option = $this->createElement('checkbox', $compObj->componentID, NULL, ts('Contribution'));
-          if (!empty($priceSetUsedTables)) {
-            foreach (['civicrm_contribution', 'civicrm_contribution_page'] as $table) {
-              if (in_array($table, $priceSetUsedTables)) {
-                $option->freeze();
-                break;
-              }
-            }
-          }
-          $extends[] = $option;
-          break;
-
-        case 'CiviMember':
-          $option = $this->createElement('checkbox', $compObj->componentID, NULL, ts('Membership'));
-          if (!empty($priceSetUsedTables)) {
-            foreach (['civicrm_membership', 'civicrm_contribution_page'] as $table) {
-              if (in_array($table, $priceSetUsedTables)) {
-                $option->freeze();
-                break;
-              }
-            }
-          }
-          $extends[] = $option;
-          break;
-      }
-    }
-
-    if (CRM_Utils_System::isNull($extends)) {
-      $this->assign('extends', FALSE);
-    }
-    else {
-      $this->assign('extends', TRUE);
-    }
-
-    $this->addGroup($extends, 'extends', ts('Used For'), '&nbsp;', TRUE);
-
-    $this->addRule('extends', ts('%1 is a required field.', [1 => ts('Used For')]), 'required');
 
     // financial type
     $financialType = CRM_Financial_BAO_FinancialType::getIncomeFinancialType();
@@ -226,11 +161,6 @@ class CRM_Price_Form_Set extends CRM_Core_Form {
     if ($this->getEntityId()) {
       $params = ['id' => $this->getEntityId()];
       CRM_Price_BAO_PriceSet::retrieve($params, $defaults);
-      $extends = explode(CRM_Core_DAO::VALUE_SEPARATOR, $defaults['extends']);
-      unset($defaults['extends']);
-      foreach ($extends as $compId) {
-        $defaults['extends'][$compId] = 1;
-      }
     }
 
     return $defaults;
@@ -245,17 +175,6 @@ class CRM_Price_Form_Set extends CRM_Core_Form {
     $nameLength = CRM_Core_DAO::getAttribute('CRM_Price_DAO_PriceSet', 'name');
     $params['is_active'] ??= FALSE;
     $params['financial_type_id'] ??= FALSE;
-
-    $compIds = [];
-    $extends = $params['extends'] ?? NULL;
-    if (is_array($extends)) {
-      foreach ($extends as $compId => $selected) {
-        if ($selected) {
-          $compIds[] = $compId;
-        }
-      }
-    }
-    $params['extends'] = implode(CRM_Core_DAO::VALUE_SEPARATOR, $compIds);
 
     if ($this->_action & CRM_Core_Action::UPDATE) {
       $params['id'] = $this->getEntityId();

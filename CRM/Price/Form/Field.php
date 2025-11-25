@@ -94,6 +94,7 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
     $url = CRM_Utils_System::url('civicrm/admin/price/field', "reset=1&action=browse&sid={$this->_sid}");
     $breadCrumb = [['title' => ts('Price Set Fields'), 'url' => $url]];
 
+    // @todo: Check pricefieldvalue for entity_table = event/membership
     $this->_extendComponentId = [];
     $extendComponentId = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_PriceSet', $this->_sid, 'extends', 'id');
     if ($extendComponentId) {
@@ -693,6 +694,7 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
     if (!CRM_Core_Component::isEnabled('CiviMember')) {
       return FALSE;
     }
+    // @todo: Use a entity_table field on PriceFieldValue to check if it has membership fields?
     return in_array(CRM_Core_Component::getComponentID('CiviMember'), array_filter($this->_extendComponentId));
   }
 
@@ -705,6 +707,7 @@ class CRM_Price_Form_Field extends CRM_Core_Form {
     if (!CRM_Core_Component::isEnabled('CiviEvent')) {
       return FALSE;
     }
+    // @todo: Use a entity_table field on PriceFieldValue to check if it has event fields?
     return in_array(CRM_Core_Component::getComponentID('CiviEvent'), array_filter($this->_extendComponentId));
   }
 

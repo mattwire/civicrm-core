@@ -620,7 +620,6 @@ class CRM_Event_Form_ManageEvent_Fee extends CRM_Event_Form_ManageEvent {
                 }
                 $setParams['is_quick_config'] = 1;
                 $setParams['financial_type_id'] = $params['financial_type_id'];
-                $setParams['extends'] = CRM_Core_Component::getComponentID('CiviEvent');
                 $priceSet = CRM_Price_BAO_PriceSet::writeRecord($setParams);
 
                 $fieldParams['name'] = strtolower(CRM_Utils_String::munge($params['fee_label'], '_', 245));
@@ -709,7 +708,6 @@ class CRM_Event_Form_ManageEvent_Fee extends CRM_Event_Form_ManageEvent {
                   }
                   $setParams['is_quick_config'] = 1;
                   $setParams['financial_type_id'] = $params['financial_type_id'];
-                  $setParams['extends'] = CRM_Core_Component::getComponentID('CiviEvent');
                   $priceSet = CRM_Price_BAO_PriceSet::create($setParams);
                   $priceSetID = $priceSet->id;
                 }

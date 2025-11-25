@@ -123,15 +123,6 @@ class CRM_Price_Page_Option extends CRM_Core_Page {
     ]);
     $customOption = $priceOptions['values'];
 
-    // CRM-15378 - check if these price options are in an Event price set
-    $isEvent = FALSE;
-    $extendComponentId = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_PriceSet', $this->_sid, 'extends', 'id');
-    $allComponents = explode(CRM_Core_DAO::VALUE_SEPARATOR, $extendComponentId);
-    $eventComponentId = CRM_Core_Component::getComponentID('CiviEvent');
-    if (in_array($eventComponentId, $allComponents)) {
-      $isEvent = TRUE;
-    }
-
     $taxRate = CRM_Core_PseudoConstant::getTaxRates();
 
     $getTaxDetails = FALSE;

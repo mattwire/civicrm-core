@@ -360,14 +360,12 @@ class CRM_Member_Form_MembershipBlock extends CRM_Contribute_Form_ContributionPa
             $setParams['name'] = $pageTitle . '_' . date('is', $timeSec[0]) . $timeSec[1];
           }
           $setParams['is_quick_config'] = 1;
-          $setParams['extends'] = CRM_Core_Component::getComponentID('CiviMember');
           $setParams['financial_type_id'] = $this->_values['financial_type_id'] ?? NULL;
           $priceSet = CRM_Price_BAO_PriceSet::create($setParams);
           $priceSetID = $priceSet->id;
           $fieldParams['price_set_id'] = $priceSet->id;
         }
         elseif ($usedPriceSetId) {
-          $setParams['extends'] = CRM_Core_Component::getComponentID('CiviMember');
           $setParams['financial_type_id'] = $this->_values['financial_type_id'] ?? NULL;
           $setParams['id'] = $usedPriceSetId;
           $priceSet = CRM_Price_BAO_PriceSet::create($setParams);

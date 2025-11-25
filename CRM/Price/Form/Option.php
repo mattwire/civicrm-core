@@ -93,6 +93,7 @@ class CRM_Price_Form_Option extends CRM_Core_Form {
       }
     }
 
+    // @todo: Check pricefieldvalue for entity_table = event/membership
     $extendComponentId = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_PriceSet', $this->_sid, 'extends', 'id');
 
     if (!isset($defaults['membership_num_terms']) && $this->isComponentPriceOption($extendComponentId, 'CiviMember')) {
@@ -161,6 +162,7 @@ class CRM_Price_Form_Option extends CRM_Core_Form {
       ) {
         $this->_sid = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_PriceField', $this->_fid, 'price_set_id', 'id');
       }
+      // @todo: Check pricefieldvalue for entity_table = event/membership
       $extendComponentId = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_PriceSet', $this->_sid, 'extends', 'id');
       $this->assign('showMember', FALSE);
       if ($this->isComponentPriceOption($extendComponentId, 'CiviMember')) {

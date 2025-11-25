@@ -40,7 +40,6 @@
         <thead>
         <tr>
             <th id="sortable">{ts}Set Title{/ts}</th>
-            <th id="nosort">{ts}Used For{/ts}</th>
             <th>{ts}Enabled?{/ts}</th>
             <th></th>
         </tr>
@@ -48,7 +47,6 @@
         {foreach from=$rows item=row}
       <tr id="price_set-{$row.id}" class="crm-entity crm-price-set_{$row.id} {cycle values="even-row,odd-row"}{if !empty($row.class)} {$row.class}{/if}{if NOT $row.is_active} disabled{/if}">
           <td class="crmf-title crm-editable">{$row.title}</td>
-          <td class="crmf-extends">{$row.extends}</td>
           <td class="crmf-is_active">{if $row.is_active eq 1} {ts}Yes{/ts} {else} {ts}No{/ts} {/if}</td>
           <td>{$row.action|smarty:nodefaults|replace:'xx':$row.id}</td>
         </tr>
