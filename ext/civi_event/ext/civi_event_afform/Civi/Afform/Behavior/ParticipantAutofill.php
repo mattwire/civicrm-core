@@ -4,7 +4,7 @@ namespace Civi\Afform\Behavior;
 use Civi\Afform\AbstractBehavior;
 use Civi\Afform\Event\AfformPrefillEvent;
 use Civi\Token\TokenRow;
-use CRM_Afform_ExtensionUtil as E;
+use CRM_CiviEventAfform_ExtensionUtil as E;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
