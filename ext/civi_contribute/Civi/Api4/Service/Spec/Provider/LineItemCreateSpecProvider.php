@@ -27,6 +27,9 @@ class LineItemCreateSpecProvider extends AutoService implements Generic\SpecProv
   public function modifySpec(RequestSpec $spec) {
     // Not required if qty + unit_price are set
     $spec->getFieldByName('line_total')->setRequired(FALSE);
+    // If a contribution is deleted the lineItem will still exist. But we should always have a contribution
+    //   when we create a lineItem
+    $spec->getFieldByName('contribution_id')->setRequired(TRUE);
   }
 
   /**
