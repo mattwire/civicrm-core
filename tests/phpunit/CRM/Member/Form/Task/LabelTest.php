@@ -28,7 +28,7 @@ class CRM_Member_Form_Task_LabelTest extends CiviUnitTestCase {
     $this->assertArrayHasKey(201, $tasks, print_r($tasks, TRUE));
     $tasks = CRM_Member_Task::permissionedTaskTitles(CRM_Core_Permission::EDIT);
     $this->assertArrayHasKey(201, $tasks);
-    $this->contactMembershipCreate(['contact_id' => $this->individualCreate()]);
+    $this->contactMembershipCreate(['contact_id' => $this->individualCreate(), 'skipLineItem' => TRUE]);
     /** @var CRM_Member_Form_Task_Label $form */
     $form = $this->getSearchFormObject('CRM_Member_Form_Task_Label', [
       'task' => 201,

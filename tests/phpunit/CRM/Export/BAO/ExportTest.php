@@ -422,7 +422,7 @@ class CRM_Export_BAO_ExportTest extends CiviUnitTestCase {
   public function setUpMembershipExportData(): void {
     $this->setUpContactExportData();
     // Create an extra so we don't get false passes due to 1
-    $this->contactMembershipCreate(['contact_id' => $this->contactIDs[0]]);
+    $this->contactMembershipCreate(['contact_id' => $this->contactIDs[0], 'skipLineItem' => TRUE]);
     $this->paymentProcessorCreate();
     $this->setupMembershipRecurringPaymentProcessorTransaction();
 

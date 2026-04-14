@@ -35,8 +35,8 @@ class CRM_Member_Form_Task_BatchTest extends CiviUnitTestCase {
    * @throws \CRM_Core_Exception
    */
   public function testBatchSubmit(): void {
-    $membership1 = $this->contactMembershipCreate(['contact_id' => $this->individualCreate()]);
-    $membership2 = $this->contactMembershipCreate(['contact_id' => $this->individualCreate()]);
+    $membership1 = $this->contactMembershipCreate(['contact_id' => $this->individualCreate(), 'skipLineItem' => TRUE]);
+    $membership2 = $this->contactMembershipCreate(['contact_id' => $this->individualCreate(), 'skipLineItem' => TRUE]);
     $this->createCustomGroupWithFieldOfType(['extends' => 'Membership'], 'text');
     $this->createTestEntity('UFGroup', [
       'name' => 'membership',

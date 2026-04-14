@@ -741,6 +741,7 @@ contribution_recur.payment_instrument_id:name :Check
       $this->ids['Membership'][0] = $this->contactMembershipCreate([
         'contact_id' => $this->getContactID(),
         $this->getCustomFieldName('text') => 'my field',
+        'skipLineItem' => TRUE,
       ]);
     }
     return $this->ids['Membership'][0];

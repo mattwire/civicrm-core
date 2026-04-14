@@ -465,6 +465,7 @@ class CRM_Member_Import_Parser_MembershipTest extends CiviUnitTestCase {
     $this->createTestEntity('Membership', [
       'membership_type_id:name' => 'General',
       'contact_id' => $this->individualCreate(),
+      'skipLineItem' => TRUE,
     ]);
     $this->importCSV('memberships_with_id.csv', [
       ['name' => 'Membership.id'],
@@ -537,6 +538,7 @@ class CRM_Member_Import_Parser_MembershipTest extends CiviUnitTestCase {
       'contact_id' => $contactID,
       'membership_type_id' => 'General',
       'start_date' => '2020-10-01',
+      'skipLineItem' => TRUE,
     ]);
     $mapping = [
       ['name' => 'Membership.id'],

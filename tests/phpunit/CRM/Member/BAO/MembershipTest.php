@@ -108,6 +108,7 @@ class CRM_Member_BAO_MembershipTest extends CiviUnitTestCase {
       'membership_type_id' => $membershipTypeWithRelationship["id"],
       'contact_id'         => $organizationId,
       'status_id:name'          => 'test status',
+      'skipLineItem' => TRUE,
     ], 'first');
 
     // Check count of related memberships. It should be one for individual contact.
@@ -751,6 +752,7 @@ class CRM_Member_BAO_MembershipTest extends CiviUnitTestCase {
       'source' => 'Payment',
       'is_override' => 1,
       'status_id' => $this->_membershipStatusID,
+      'skipLineItem' => TRUE,
     ];
 
     $this->callAPISuccess('Membership', 'create', $params);

@@ -66,6 +66,7 @@ class api_v3_MembershipTest extends CiviUnitTestCase {
       'source' => 'Payment',
       'is_override' => 1,
       'status_id' => $this->ids['MembershipStatus']['test member status'],
+      'skipLineItem' => TRUE,
     ];
   }
 
@@ -117,7 +118,7 @@ class api_v3_MembershipTest extends CiviUnitTestCase {
    */
   public function testMembershipDeletePreserveContribution(): void {
     //DELETE
-    $membershipID = $this->contactMembershipCreate($this->_params);
+    $membershipID = $this->contactMembershipCreate(array_merge($this->_params, ['skipLineItem' => TRUE]));
     //DELETE
     $this->assertDBRowExist('CRM_Member_DAO_Membership', $membershipID);
     $ContributionCreate = $this->callAPISuccess('Contribution', 'create', [
@@ -126,6 +127,7 @@ class api_v3_MembershipTest extends CiviUnitTestCase {
       'total_amount' => 100,
       'contact_id' => $this->_params['contact_id'],
     ]);
+    // @fixme: This test should be updated to create lineItems and not MembershipPayment (use Order API?)
     $this->callAPISuccess('MembershipPayment', 'create', [
       'sequential' => 1,
       'contribution_id' => $ContributionCreate['values'][0]['id'],

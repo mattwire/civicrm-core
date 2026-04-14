@@ -1889,6 +1889,7 @@ class api_v3_ContactTest extends CiviUnitTestCase {
       'start_date' => '01/01/2015',
       'join_date' => '01/01/2010',
       'end_date' => '12/31/2015',
+      'skipLineItem' => TRUE,
     ];
     $ownerMembershipID = $this->contactMembershipCreate($membershipParams);
 

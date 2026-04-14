@@ -363,7 +363,11 @@ class TokenProcessorTest extends \CiviUnitTestCase {
       ->addValue('amount', 5)
       ->execute()
       ->first()['id'];
-    $mid = $this->contactMembershipCreate(['contribution_recur_id' => $crid, 'contact_id' => $cid]);
+    $mid = $this->contactMembershipCreate([
+      'contribution_recur_id' => $crid,
+      'contact_id' => $cid,
+      'skipLineItem' => TRUE,
+    ]);
 
     $tokenProcessor = new TokenProcessor(\Civi::dispatcher(), [
       'controller' => __CLASS__,
