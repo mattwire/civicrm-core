@@ -1093,13 +1093,9 @@ class CRM_Contribute_BAO_FinancialProcessor {
           $line['financial_type_id'] = CRM_Core_DAO::getFieldValue('CRM_Price_DAO_PriceFieldValue', $line['price_field_value_id'], 'financial_type_id');
         }
         $createdLineItem = CRM_Price_BAO_LineItem::create($line);
-
-        if (!$this->isUpdate()) {
-          $financialItem = CRM_Financial_BAO_FinancialItem::add($createdLineItem, $this->getUpdatedContribution());
-          $line['financial_item_id'] = $financialItem->id;
-          if (!empty($line['tax_amount'])) {
-            CRM_Financial_BAO_FinancialItem::add($createdLineItem, $this->getUpdatedContribution(), TRUE);
-          }
+        if (isset($createdLineItem->financial_item_id)) {
+          // @todo: This line can probably be removed, but check it's not used by $this->createDeferredTrxn() below
+          $line['financial_item_id'] = $createdLineItem->financial_item_id;
         }
       }
     }
