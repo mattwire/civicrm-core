@@ -111,7 +111,32 @@ class CRM_Price_BAO_LineItem extends CRM_Price_DAO_LineItem implements Civi\Core
       $contributionIsTemplate = FALSE;
     }
 
-    if (!$contributionIsTemplate && $lineItem->entity_table === 'civicrm_membership' && $lineItem->contribution_id && $lineItem->entity_id) {
+    if ($contributionIsTemplate) {
+      // We don't create related records for LineItems when it is a template:
+      //   - ParticipantPayment/MembershipPayment
+      //   - FinancialItems etc.
+      return;
+    }
+
+    if (empty($record['id'])) {
+      // This is a new lineItem - create the financialItem records
+      $contributionBAO = new CRM_Contribute_BAO_Contribution();
+      $contributionBAO->id = $lineItem->contribution_id;
+      if (!$contributionBAO->find(TRUE)) {
+        throw new CRM_Core_Exception('contribution_id is required for LineItem create');
+      }
+      $financialItem = CRM_Financial_BAO_FinancialItem::add($lineItem, $contributionBAO);
+      $lineItem->financial_item_id = $financialItem->id;
+      if (!empty($lineItem->tax_amount)) {
+        CRM_Financial_BAO_FinancialItem::add($lineItem, $contributionBAO, TRUE);
+      }
+      // @todo Ok, so we've created the FinancialItems, but now the calling code might do it again..
+    }
+    else {
+      // @todo We're updating a LineItem. What should we do with FinancialItems etc?
+    }
+
+    if ($lineItem->entity_table === 'civicrm_membership' && $lineItem->contribution_id && $lineItem->entity_id) {
       CRM_Member_BAO_MembershipPayment::legacyMembershipPaymentCreateIfNotExist($lineItem->entity_id, $lineItem->contribution_id, TRUE);
     }
     if ($lineItem->entity_table === 'civicrm_participant' && $lineItem->contribution_id && $lineItem->entity_id) {
