@@ -36,7 +36,7 @@ class CRM_Price_BAO_LineItem extends CRM_Price_DAO_LineItem implements Civi\Core
   }
 
   /**
-   * Modify a financial Transaction prior to saving to re-calculate net amount and correct the currency value
+   * Callback for hook_civicrm_pre().
    *
    * @param \Civi\Core\Event\PreEvent $event
    *
@@ -88,7 +88,11 @@ class CRM_Price_BAO_LineItem extends CRM_Price_DAO_LineItem implements Civi\Core
 
   /**
    * Callback for hook_civicrm_post().
+   *
    * @param \Civi\Core\Event\PostEvent $event
+   *
+   * @throws \CRM_Core_Exception
+   * @throws \Civi\API\Exception\UnauthorizedException
    */
   public static function self_hook_civicrm_post(\Civi\Core\Event\PostEvent $event): void {
     /** @var \CRM_Price_DAO_LineItem $lineItem */
