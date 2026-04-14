@@ -42,6 +42,15 @@ class CRM_Financial_BAO_FinancialItem extends CRM_Financial_DAO_FinancialItem {
    * @return CRM_Financial_DAO_FinancialItem
    */
   public static function add($lineItem, $contribution, $taxTrxnID = FALSE, $trxnId = NULL) {
+    if (!empty($lineItem->financial_item_id)) {
+      // After https://github.com/civicrm/civicrm-core/pull/35082 LineItem::Create automatically creates related financialItems
+      // Older code needs updating to remove calls to CRM_Financial_BAO_FinancialItem::add()
+      // This prevents it from actually doing anything if it's already been run
+      CRM_Core_Error::deprecatedWarning('CRM_Financial_DAO_FinancialItem::add called multiple times. If you are using LineItem::Create you should not create FinancialItems separately');
+      $financialItem = new CRM_Financial_BAO_FinancialItem();
+      $financialItem->id = $lineItem->financial_item_id;
+      return $financialItem->find(TRUE);
+    }
     $financialItemStatus = CRM_Financial_DAO_FinancialItem::buildOptions('status_id');
     $contributionStatus = CRM_Core_PseudoConstant::getName('CRM_Contribute_BAO_Contribution', 'contribution_status_id', $contribution->contribution_status_id);
     $itemStatus = NULL;
