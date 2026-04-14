@@ -340,35 +340,6 @@ class CRM_Member_BAO_Membership extends CRM_Member_DAO_Membership {
         if (!empty($ids['membership'])) {
           CRM_Price_BAO_LineItem::deleteLineItems($ids['membership'], 'civicrm_membership');
         }
-        // @todo - we should ONLY do the below if a contribution is created. Let's
-        // get some deprecation notices in here & see where it's hit & work to eliminate.
-        // This could happen if there is no contribution or we are in one of many
-        // weird and wonderful flows. This is scary code. Keep adding tests.
-        if (!empty($params['line_item']) && empty($params['contribution_id'])) {
-
-          foreach ($params['line_item'] as $priceSetId => $lineItems) {
-            foreach ($lineItems as $lineIndex => $lineItem) {
-              $lineMembershipType = $lineItem['membership_type_id'] ?? NULL;
-              if (!empty($params['contribution'])) {
-                CRM_Core_Error::deprecatedWarning('passing contribution into Membership Create is deprecated - use the Order api to get the line items right.');
-                $params['line_item'][$priceSetId][$lineIndex]['contribution_id'] = $params['contribution']->id;
-              }
-              if ($lineMembershipType && $lineMembershipType == ($params['membership_type_id'] ?? NULL)) {
-                $params['line_item'][$priceSetId][$lineIndex]['entity_id'] = $membership->id;
-                $params['line_item'][$priceSetId][$lineIndex]['entity_table'] = 'civicrm_membership';
-              }
-              elseif (!$lineMembershipType && !empty($params['contribution'])) {
-                $params['line_item'][$priceSetId][$lineIndex]['entity_id'] = $params['contribution']->id;
-                $params['line_item'][$priceSetId][$lineIndex]['entity_table'] = 'civicrm_contribution';
-              }
-            }
-          }
-          CRM_Price_BAO_LineItem::processPriceSet(
-            $membership->id,
-            $params['line_item'],
-            $params['contribution'] ?? NULL
-          );
-        }
       }
     }
 
