@@ -2932,13 +2932,20 @@ INNER JOIN civicrm_activity ON civicrm_activity_contact.activity_id = civicrm_ac
       }
     }
 
-    $contributionParams['id'] = $contributionID;
-    $contributionParams['is_post_payment_create'] = $isPostPaymentCreate;
-
-    $contributionResult = civicrm_api3('Contribution', 'create', $contributionParams);
+    if ($isPostPaymentCreate) {
+      $contributionResult = \Civi\Api4\Contribution::update(FALSE)
+        ->setValues($contributionParams)
+        ->addWhere('id', '=', $contributionID)
+        ->execute()
+        ->first();
+    }
+    else {
+      $contributionParams['id'] = $contributionID;
+      $contributionResult = civicrm_api3('Contribution', 'create', $contributionParams);
+    }
 
     $transaction->commit();
-    \Civi::log()->info("Contribution {$contributionParams['id']} updated successfully");
+    \Civi::log()->info("Contribution {$contributionID} updated successfully");
 
     $contributionSoft = ContributionSoft::get(FALSE)
       ->addWhere('contribution_id', '=', $contributionID)
@@ -2955,10 +2962,10 @@ INNER JOIN civicrm_activity ON civicrm_activity_contact.activity_id = civicrm_ac
           'id' => $contributionID,
           'payment_processor_id' => $paymentProcessorId,
         ]);
-        \Civi::log()->info("Contribution {$contributionParams['id']} Receipt sent");
+        \Civi::log()->info("Contribution {$contributionID} Receipt sent");
       }
       catch (Exception $e) {
-        \Civi::log()->warning("Contribution {$contributionParams['id']} Failed to send receipt: " . $e->getMessage());
+        \Civi::log()->warning("Contribution {$contributionID} Failed to send receipt: " . $e->getMessage());
       }
     }
 
