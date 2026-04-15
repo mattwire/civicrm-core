@@ -74,7 +74,7 @@ class CRM_Price_BAO_LineItem extends CRM_Price_DAO_LineItem implements Civi\Core
       $record['line_total'] = $record['qty'] * $record['unit_price'];
     }
 
-    if (!isset($record['line_total'])) {
+    if (empty($record['id']) && !isset($record['line_total'])) {
       throw new CRM_Core_Exception('line_total is required for LineItem create');
     }
 
