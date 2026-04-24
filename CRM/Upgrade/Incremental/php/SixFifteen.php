@@ -29,6 +29,23 @@ class CRM_Upgrade_Incremental_php_SixFifteen extends CRM_Upgrade_Incremental_Bas
    */
   public function upgrade_6_15_alpha1($rev): void {
     $this->addTask(ts('Upgrade DB to %1: SQL', [1 => $rev]), 'runSql', $rev);
+
+    $this->addTask('Add column "LineItem.created_date"', 'alterSchemaField', 'LineItem', 'created_date', [
+      'title' => ts('Created Date'),
+      'sql_type' => 'timestamp',
+      'input_type' => 'Select Date',
+      'readonly' => TRUE,
+      'description' => ts('When was the LineItem created.'),
+      'add' => '6.15',
+      'unique_name' => 'lineitem_created_date',
+      'default' => 'CURRENT_TIMESTAMP',
+      'usage' => [
+        'export',
+      ],
+      'input_attrs' => [
+        'label' => ts('Created Date'),
+      ],
+    ]);
   }
 
 }
