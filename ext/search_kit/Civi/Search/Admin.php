@@ -340,8 +340,18 @@ class Admin {
               // Add the straight 1-1 join (but only if it's not a reference to itself, those can be done with implicit joins)
               if (!$isSelf) {
                 $alias = $entity['name'] . '_' . $targetEntityName . '_' . $keyField['name'];
+                $label = $entity['title'] . ' ' . ($dynamicCol ? $targetEntity['title'] : $keyField['label']);
+                if ($alias === 'LineItem_Contribution_contribution_id') {
+                  // Because we have two joins we end up with "LineItem Contribution" and "LineItem Contribution"
+                  $label = 'Parent Contribution';
+                }
+                if ($alias === 'LineItem_Contribution_entity_id') {
+                  // LineItem.entity_id === LineItem.contribution_id if LineItem.entity_table='civicrm_contribution'
+                  // Confusing to show two joins
+                  continue;
+                }
                 $joins[$entity['name']][] = [
-                  'label' => $entity['title'] . ' ' . ($dynamicCol ? $targetEntity['title'] : $keyField['label']),
+                  'label' => $label,
                   'description' => '',
                   'entity' => $targetEntityName,
                   'conditions' => self::getJoinConditions($keyField['name'], $alias . '.' . $reference->getTargetKey(), $dynamicValue, $dynamicCol),
