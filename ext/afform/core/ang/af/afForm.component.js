@@ -396,6 +396,18 @@
       this.submit = function () {
         // validate required fields on the form
         if (!ctrl.ngForm.$valid || !validateFileFields()) {
+          var requiredFieldsNames = [];
+          angular.forEach(ctrl.ngForm, function($error){
+            if($error?.required) {
+              angular.forEach($error.required, function(required) {
+                if (required.$valid === false) {
+                  requiredFieldsNames.push(required.$$element[0].id);
+                }
+              })
+            }
+          });
+          console.log('Required Fields: ' + requiredFieldsNames);
+
           // at this point we want the user to know to check the invalid fields
           //
           // the complication is the browser will natively trigger notifications
