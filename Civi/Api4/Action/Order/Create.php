@@ -44,6 +44,11 @@ class Create extends AbstractAction {
   protected array $lineItems;
 
   /**
+   * @var int|null
+   */
+  protected ?int $templateContributionID = NULL;
+
+  /**
    * @param array $lineItem
    *
    * @return $this
@@ -104,6 +109,9 @@ class Create extends AbstractAction {
     foreach ($this->lineItems as $index => $lineItem) {
       $this->formatWriteValues($lineItem, 'LineItem', 'create');
       $order->setLineItem($lineItem, $index);
+    }
+    if (isset($this->templateContributionID)) {
+      $order->setTemplateContributionID($this->templateContributionID);
     }
     $order->setContributionRecur($this->getContributionRecurValues());
     $result[] = $order->save($this->getContributionValues())->first();
