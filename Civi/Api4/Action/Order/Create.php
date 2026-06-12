@@ -107,7 +107,7 @@ class Create extends AbstractAction {
     }
     $order->setContributionRecurValues($this->getContributionRecurValues());
     $order->setContributionValues($this->getContributionValues());
-    $result[] = $order->validate()->save()->first();
+    $result[] = $order->validate()->create()->first();
   }
 
 }

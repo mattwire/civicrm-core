@@ -1725,7 +1725,7 @@ class CRM_Financial_BAO_Order {
    *
    * @throws \CRM_Core_Exception
    */
-  public function save(): Result {
+  public function create(): Result {
     // Now we must save/create a ContributionRecur before we create related entity IDs because ContributionRecurID is
     //   linked to some related entities, eg. Membership.
     $this->saveContributionRecur();
