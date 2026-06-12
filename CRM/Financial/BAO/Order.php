@@ -16,7 +16,9 @@ use Civi\Api4\LineItem;
 use Civi\Api4\PriceField;
 use Civi\Api4\PriceFieldValue;
 use Civi\Api4\PriceSet;
+use Civi\Order\Event\OrderCreateEvent;
 use Civi\Order\Event\OrderValidateEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  *
@@ -34,7 +36,7 @@ use Civi\Order\Event\OrderValidateEvent;
  * @internal
  *
  */
-class CRM_Financial_BAO_Order {
+class CRM_Financial_BAO_Order implements EventSubscriberInterface  {
 
   /**
    * Price set id.
@@ -102,6 +104,12 @@ class CRM_Financial_BAO_Order {
    * @var int|null
    */
   private ?int $existingContributionRecurID = NULL;
+
+  public static function getSubscribedEvents(): array {
+    return [
+      'civi.order.create' => ['onOrderCreate', 0],
+    ];
+  }
 
   /**
    * @param bool $isExcludeExpiredFields
@@ -1726,20 +1734,38 @@ class CRM_Financial_BAO_Order {
    * @throws \CRM_Core_Exception
    */
   public function create(): Result {
+    $event = new OrderCreateEvent($this->getExistingContributionID(), $this->getExistingContributionRecurID(), $this->contributionValues, $this->contributionRecurValues, $this->lineItems);
+    $event = \Civi::dispatcher()->dispatch('civi.order.create', $event);
+    return \Civi\Api4\Contribution::get(FALSE)
+      ->addWhere('id', '=', $event->getContributionID())
+      ->execute();
+  }
+
+  public static function onOrderCreate(OrderCreateEvent $event): void {
+    $order = new \CRM_Financial_BAO_Order();
+    $order->setContributionValues($event->getContributionValues());
+    $order->setContributionRecurValues($event->getContributionRecurValues());
+    $order->setLineItems($event->getLineItems());
+    $order->setExistingContributionID($event->getContributionID());
+    $order->setExistingContributionRecurID($event->getContributionRecurID());
+
     // Now we must save/create a ContributionRecur before we create related entity IDs because ContributionRecurID is
     //   linked to some related entities, eg. Membership.
-    $this->saveContributionRecur();
-    foreach ($this->getLineItems() as $index => $lineItem) {
+    $order->saveContributionRecur();
+    $event->setContributionRecurID($order->getExistingContributionRecurID());
+
+    foreach ($order->getLineItems() as $index => $lineItem) {
       // Save entities first, so we can get the Entity ID.
       if ($lineItem['entity_table'] !== 'civicrm_contribution') {
-        $this->setLineItemValue('entity_id', $this->saveLineItemEntity($lineItem), $index);
+        $order->setLineItemValue('entity_id', $order->saveLineItemEntity($lineItem), $index);
       }
     }
-    $this->contributionValues['line_item'] = [$this->getLineItems()];
+    $order->contributionValues['line_item'] = [$order->getLineItems()];
 
     // Create the Contribution
-    return Contribution::create(FALSE)
-      ->setValues($this->contributionValues)->execute();
+    $contribution = Contribution::create(FALSE)
+      ->setValues($order->contributionValues)->execute();
+    $event->setContributionID($contribution->first()['id']);
   }
 
   /**
