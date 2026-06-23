@@ -229,6 +229,51 @@ class Result extends \ArrayObject implements \JsonSerializable {
   }
 
   /**
+   * Helper function to check if any errors were defined
+   *
+   * @return bool
+   */
+  public function hasErrors(): bool {
+    return count($this->errors) > 0;
+  }
+
+  /**
+   * Ordered by most serious first. These are the levels that are treated as an "error".
+   *
+   * @var array
+   */
+  private array $errorLevels = [
+    LogLevel::EMERGENCY,
+    LogLevel::ALERT,
+    LogLevel::CRITICAL,
+    LogLevel::ERROR,
+  ];
+
+  /**
+   * Helper function to get the maximum severity of error
+   *
+   * @return string|null
+   */
+  public function getMaxErrorLevel(): ?string {
+    $levels = array_column($this->errors, 'level');
+    // Returns the first match (ie. the most severe)
+    return current(array_filter(
+      $this->errorLevels,
+      fn($level) => in_array($level, $levels)
+    )) ?: NULL;
+  }
+
+  /**
+   * We might have defined "errors" which are level info, warning and should be shown to the user but won't "fail" validation.
+   * If we return TRUE, assume we have something that needs resolving / is invalid.
+   *
+   * @return bool
+   */
+  public function isBlockingError(): bool {
+    return in_array($this->getMaxErrorLevel(), $this->errorLevels);
+  }
+
+  /**
    * Reduce each result to one field
    *
    * @param string $columnName
