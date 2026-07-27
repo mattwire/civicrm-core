@@ -76,6 +76,12 @@ class AutocompleteFieldSubscriber extends AutoService implements EventSubscriber
           $apiRequest->addFilter($key, $value);
         }
 
+        // Auto-add raw where-clauses defined in schema (e.g. a custom field's "Advanced Filter"
+        // pasted in as a where-clause instead of the simpler flat field=value syntax)
+        foreach ($fieldSpec['input_attrs']['where'] ?? [] as $clause) {
+          $apiRequest->addWhere($clause);
+        }
+
         // Use FK key from fieldSpec, e.g. custom Autocomplete field keys by 'value' not 'id'
         if (!$apiRequest->getKey() && !empty($fieldSpec['fk_column'])) {
           $apiRequest->setKey($fieldSpec['fk_column']);
