@@ -20,6 +20,12 @@
       backend: 'row',
     },
     {
+      key: 'row_stacked',
+      label: ts('Row (Stacked)'),
+      icon: 'fa-chart-bar',
+      backend: 'rowStack',
+    },
+    {
       key: 'line',
       label: ts('Line'),
       icon: 'fa-line-chart',

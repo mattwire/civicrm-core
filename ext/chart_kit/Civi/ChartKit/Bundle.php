@@ -62,6 +62,7 @@ class Bundle extends CRM_Core_Resources_Bundle implements EventSubscriberInterfa
       $this->addScriptFile(E::SHORT_NAME, 'js/typeBackends/chartKitHeatMap.js', ['weight' => 20]);
       $this->addScriptFile(E::SHORT_NAME, 'js/typeBackends/chartKitPie.js', ['weight' => 20]);
       $this->addScriptFile(E::SHORT_NAME, 'js/typeBackends/chartKitRow.js', ['weight' => 20]);
+      $this->addScriptFile(E::SHORT_NAME, 'js/typeBackends/chartKitRowStack.js', ['weight' => 20]);
       $this->addScriptFile(E::SHORT_NAME, 'js/typeBackends/chartKitSeries.js', ['weight' => 20]);
       $this->addScriptFile(E::SHORT_NAME, 'js/typeBackends/chartKitStack.js', ['weight' => 20]);
 
