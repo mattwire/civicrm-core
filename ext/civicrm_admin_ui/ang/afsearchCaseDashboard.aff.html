@@ -1,0 +1,103 @@
+<style>
+  /*
+    Wide screens: filters/buttons on the left, chart on the right (row).
+    Narrow screens: filters/buttons stacked above the chart (column) - the
+    DOM order already puts the toolbar first, so switching flex-direction
+    is all that's needed to get "above" for free.
+  */
+  .crm-case-dashboard-summary-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+  }
+  @media (min-width: 768px) {
+    .crm-case-dashboard-summary-row {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+  }
+  .crm-case-dashboard-toolbar {
+    flex: 1 1 320px;
+  }
+  .crm-case-dashboard-toolbar .crm-case-dashboard-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em 1em;
+  }
+  .crm-case-dashboard-toolbar .crm-case-dashboard-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-top: 0.75em;
+  }
+  .crm-case-dashboard-chart-col {
+    flex: 2 1 480px;
+    min-width: 0;
+  }
+</style>
+<!--
+  A single af-fieldset wraps the toolbar, chart, and both tables so that
+  case_type_id/status_id (via af-field's normal auto-filter mechanism) and
+  the "Show Only My Cases" toggle (via the explicit filters="" override on
+  each search-display - see the comment below) apply identically to all
+  three searches, instead of each section having its own independent
+  filter state. af-title works on any element (not just af-fieldset), so
+  each section still gets its own heading via a plain div.
+-->
+<div af-fieldset="" store-values="1">
+  <div af-title="Case Summary">
+    <div class="crm-case-dashboard-summary-row">
+      <div class="crm-case-dashboard-toolbar">
+        <div class="af-container af-layout-inline crm-case-dashboard-filters">
+          <af-field name="case_type_id" defn="{input_attrs: {multiple: true, placeholder: 'Case Type'}, required: false, label: false}" />
+          <af-field name="status_id" defn="{input_attrs: {multiple: true, placeholder: 'Case Status'}, required: false, label: false}" />
+          <!--
+            Deliberately not an af-field bound to a real filterable field
+            (e.g. is_my_case): Afform's filter-emptiness check (afFieldset
+            directive's isEmpty()) treats null/''/[]/{} as "no filter" but
+            not `false` - an unchecked boolean field sends an explicit
+            filter=false (show NO cases) rather than clearing the filter
+            (show all), and there's no combination of input_type that
+            avoids it once the field's own value is a real, non-empty
+            `false`. A plain checkbox bound to a local scope var sidesteps
+            the field system entirely; its value only reaches each query
+            via the explicit `filters` attribute on that search-display,
+            which overrides (not merges under) the fieldset's own filters -
+            see searchDisplayBaseTrait.service.js's `_.assign({},
+            getAfformFilters(), this.filters)`. Filters on
+            is_my_managed_case (case manager role specifically) rather than
+            comparing case_manager_id to the current user's contact ID
+            client-side, because the global `CRM` object (e.g.
+            CRM.config.cid) is not resolvable via Angular's scope-based
+            expression parser in this context (confirmed: $parse('CRM')
+            evaluates to undefined here).
+          -->
+          <label class="af-container af-layout-inline">
+            <input type="checkbox" ng-model="myCasesOnly" />
+            Show Only My Cases
+          </label>
+        </div>
+        <div class="btn-group crm-case-dashboard-buttons">
+          <a class="btn btn-primary" ng-href="{{:: crmUrl('civicrm/case/add', {action: 'add', context: 'standalone', reset: 1}) }}">
+            <i class="crm-i fa-plus-circle"></i> {{:: ts('Add Case') }}
+          </a>
+          <a class="btn btn-default" ng-href="{{:: crmUrl('civicrm/case/search', {reset: 1, case_owner: 2, force: 1}) }}">
+            <i class="crm-i fa-search"></i> {{:: ts('Find My Cases') }}
+          </a>
+        </div>
+      </div>
+      <div class="crm-case-dashboard-chart-col">
+        <crm-search-display-chart-kit search-name="Case_Dashboard_Summary" display-name="Case_Dashboard_Summary_Chart" filters="{is_my_managed_case: myCasesOnly ? true : null}"></crm-search-display-chart-kit>
+      </div>
+    </div>
+  </div>
+
+  <div af-title="Cases With Upcoming Activities">
+    <crm-search-display-table search-name="Case_Dashboard_Upcoming" display-name="Case_Dashboard_Upcoming_Table" filters="{is_my_managed_case: myCasesOnly ? true : null}"></crm-search-display-table>
+  </div>
+
+  <div af-title="Cases With Recently Performed Activities">
+    <crm-search-display-table search-name="Case_Dashboard_Recent" display-name="Case_Dashboard_Recent_Table" filters="{is_my_managed_case: myCasesOnly ? true : null}"></crm-search-display-table>
+  </div>
+</div>
