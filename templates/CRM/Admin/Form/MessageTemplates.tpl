@@ -113,6 +113,15 @@
 
       {if !$isWorkflow}
         <table class="form-layout-compressed">
+          {if !empty($form.usage)}
+            <tr>
+              <td class="label-left">{$form.usage.label}</td>
+              <td>
+                {$form.usage.html}
+                <div class="description">{ts}Which token categories to offer in the picker above. Leave blank to offer contact tokens only.{/ts}</div>
+              </td>
+            </tr>
+          {/if}
           <tr>
             <td class="label-left">{$form.is_active.label}</td>
             <td>{$form.is_active.html}</td>
