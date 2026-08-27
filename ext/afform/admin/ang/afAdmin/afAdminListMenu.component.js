@@ -25,6 +25,12 @@
         if (this.tab === 'form') {
           this.formType.default = '#create/form/Individual';
         }
+        // A type this menu has no list to offer for still needs a way to create one:
+        // give it a plain link and no dropdown, rather than a menu that never loads.
+        else if (!['search', 'block'].includes(this.tab)) {
+          this.formType.default = '#create/' + this.tab;
+          this.formType.options = false;
+        }
       };
 
       this.createLinks = () => {

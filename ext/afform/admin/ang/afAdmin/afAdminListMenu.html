@@ -1,12 +1,12 @@
-<div class="btn-group" ng-if="$ctrl.formType.options !== false" af-gui-menu>
+<div class="btn-group" af-gui-menu>
   <a ng-if="$ctrl.formType.default" ng-href="{{ $ctrl.formType.default }}" class="btn btn-primary">
     {{ ts('New %1', {1: $ctrl.formType.label }) }}
   </a>
-  <button type="button" ng-click="$ctrl.createLinks()" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  <button type="button" ng-if="$ctrl.formType.options !== false" ng-click="$ctrl.createLinks()" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     <span ng-class="{'sr-only': $ctrl.formType.default}">{{ ts('New %1', {1: $ctrl.formType.label }) }}</span>
     <span class="caret"></span>
   </button>
-  <ul class="dropdown-menu" ng-if="menu.open">
+  <ul class="dropdown-menu" ng-if="menu.open && $ctrl.formType.options !== false">
     <li ng-class="{disabled: !$ctrl.formType.options || !$ctrl.formType.options.length}">
       <input ng-if="$ctrl.formType.options && $ctrl.formType.options.length" type="search" class="form-control" placeholder="&#x1f50d;" ng-model="searchCreateLinks.label">
       <a href ng-if="!$ctrl.formType.options"><i class="crm-i fa-spinner fa-spin" role="img" aria-hidden="true"></i></a>
