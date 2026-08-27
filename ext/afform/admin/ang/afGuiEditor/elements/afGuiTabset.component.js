@@ -34,12 +34,29 @@
         return ctrl.node.orientation || 'horizontal';
       };
 
+      this.itemTypes = [
+        {id: 'tab', label: ts('Tab'), icon: 'fa-folder-o'},
+        {id: 'link', label: ts('Link'), icon: 'fa-external-link'},
+        {id: 'heading', label: ts('Section heading'), icon: 'fa-header'},
+        {id: 'divider', label: ts('Divider'), icon: 'fa-minus'},
+      ];
+
+      this.linkTargets = [
+        {id: 'path', label: ts('CiviCRM page')},
+        {id: 'href', label: ts('External url')},
+      ];
+
+      // Only a tab holds content; the other types are nav-only.
+      this.isTab = (item) => !item.type || item.type === 'tab';
+
       this.$onInit = function() {
         this.selectedTab = 0;
         this.searchDisplays = [];
 
         this.node['#children'].forEach((tab) => {
-          tab['#children'] = tab['#children'] || [];
+          if (ctrl.isTab(tab)) {
+            tab['#children'] = tab['#children'] || [];
+          }
         });
 
         // Bootstrap3 doesn't handle the dropdown markup we're using (nesting the dropdown button inside the tabs)
@@ -73,6 +90,76 @@
         this.selectTab(this.node['#children'].length - 1);
       };
 
+      this.addItem = (type) => {
+        const item = {'#tag': 'af-tab'};
+        if (type !== 'tab') {
+          item.type = type;
+        }
+        if (type === 'tab' || type === 'heading') {
+          item.title = type === 'heading' ? ts('New Section') : ts('New Tab');
+        }
+        if (type === 'link') {
+          item.title = ts('New Link');
+          item.path = '';
+        }
+        if (type === 'tab') {
+          item['#children'] = [];
+        }
+        this.node['#children'].push(item);
+        this.selectTab(this.node['#children'].length - 1);
+      };
+
+      // Changing type has to clear the attributes that no longer apply, or they would
+      // be silently carried along and re-appear if the type is switched back.
+      this.getSetItemType = function(item) {
+        return function(type) {
+          if (!arguments.length) {
+            return item.type || 'tab';
+          }
+          ['type', 'path', 'href', 'target', 'icon', 'name', '#children'].forEach((key) => delete item[key]);
+          if (type !== 'tab') {
+            item.type = type;
+          }
+          if (type === 'tab') {
+            item['#children'] = [];
+          }
+          if (type === 'link') {
+            item.path = '';
+          }
+          if (type === 'divider') {
+            delete item.title;
+          }
+          else if (!item.title) {
+            item.title = ts('Untitled');
+          }
+        };
+      };
+
+      // A link is either an internal CiviCRM path or an external url, never both.
+      this.getLinkTarget = (item) => ('href' in item ? 'href' : 'path');
+
+      this.getSetLinkTarget = function(item) {
+        return function(kind) {
+          if (!arguments.length) {
+            return ctrl.getLinkTarget(item);
+          }
+          delete item.path;
+          delete item.href;
+          item[kind] = '';
+        };
+      };
+
+      this.isNewWindow = (item) => item.target === '_blank';
+
+      this.toggleNewWindow = (item) => {
+        if (ctrl.isNewWindow(item)) {
+          delete item.target;
+        }
+        else {
+          item.target = '_blank';
+        }
+      };
+
       this.deleteTab = function(tabIndex) {
         this.node['#children'].splice(tabIndex, 1);
         ctrl.editor.onRemoveElement();
@@ -80,7 +167,9 @@
       };
 
       this.selectTab = function(tabIndex) {
-        this.selectedTab = tabIndex;
+        if (this.isTab(this.node['#children'][tabIndex])) {
+          this.selectedTab = tabIndex;
+        }
       };
 
       this.pickIcon = function(tab) {
@@ -95,7 +184,7 @@
 
       // When opening the menu, fetch search displays to show in the `af-gui-tab-count` select
       this.getSearchDisplays = function(tabIndex) {
-        const displayTags = afGui.getFormElements(this.node['#children'][tabIndex]['#children'], (item) => (item['#tag'] && afGui.meta.searchDisplayTags.includes(item['#tag']) && item['search-name']));
+        const displayTags = afGui.getFormElements(this.node['#children'][tabIndex]['#children'] || [], (item) => (item['#tag'] && afGui.meta.searchDisplayTags.includes(item['#tag']) && item['search-name']));
         this.searchDisplays[tabIndex] = displayTags.map(item => {
           return {
             tag: item,

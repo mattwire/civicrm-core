@@ -1,5 +1,8 @@
-<li>
-  <a href ng-click="$ctrl.addTab()"><i class="crm-i fa-plus-square" role="img" aria-hidden="true"></i> {{:: $ctrl.isPages() ? ts('Add Page') : ts('Add Tab') }}</a>
+<li ng-if="$ctrl.isPages()">
+  <a href ng-click="$ctrl.addTab()"><i class="crm-i fa-plus-square" role="img" aria-hidden="true"></i> {{:: ts('Add Page') }}</a>
+</li>
+<li ng-repeat="itemType in $ctrl.itemTypes" ng-if="!$ctrl.isPages()">
+  <a href ng-click="$ctrl.addItem(itemType.id)"><i class="crm-i {{:: itemType.icon }}" role="img" aria-hidden="true"></i> {{ ts('Add %1', {1: itemType.label}) }}</a>
 </li>
 <li ng-if="!$ctrl.isPages()">
   <form ng-click="$event.stopPropagation()" class="af-gui-field-select-in-dropdown form-inline">

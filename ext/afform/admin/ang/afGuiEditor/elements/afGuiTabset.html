@@ -11,10 +11,12 @@
 </div>
 <div class="af-gui-tabset-body" ng-class="{'af-gui-tabset-vertical': $ctrl.isVertical()}">
   <ul class="nav" role="tablist" ng-class="$ctrl.isVertical() ? 'nav-pills nav-stacked' : 'nav-tabs'">
-    <li ng-repeat="(tabIndex, tab) in $ctrl.node['#children']" role="tab" class="dropdown" ng-class="{active: tabIndex === $ctrl.selectedTab}">
+    <li ng-repeat="(tabIndex, tab) in $ctrl.node['#children']" role="tab" class="dropdown af-gui-tab-item-{{ tab.type || 'tab' }}" ng-class="{active: tabIndex === $ctrl.selectedTab}">
       <a href ng-click="$ctrl.selectTab(tabIndex)">
         <i class="crm-i {{ tab.icon }}" ng-if="tab.icon" role="img" aria-hidden="true"></i>
+        <span class="af-gui-tab-divider-mark" ng-if="tab.type === 'divider'"></span>
         {{ tab['title'] }}
+        <i class="crm-i fa-external-link" ng-if="tab.type === 'link'" role="img" aria-hidden="true"></i>
         <button class="btn btn-default btn-xs af-gui-add-element-button" data-tab-id="{{ tabIndex }}" ng-click="$ctrl.getSearchDisplays(tabIndex)">
           <span>
             <i class="crm-i fa-gear" role="img" aria-hidden="true"></i>
@@ -24,7 +26,7 @@
       <ul class="dropdown-menu" ng-class="{'dropdown-menu-right': !$ctrl.isVertical() &amp;&amp; tabIndex &gt; 1 &amp;&amp; tabIndex == ($ctrl.node['#children'].length - 1)}" style="display: block" ng-if="$ctrl.menuOpen === tabIndex" ng-include="'~/afGuiEditor/elements/afGuiTab-menu.html'"></ul>
     </li>
   </ul>
-  <div class="af-gui-tabset-panel" ng-repeat="(tabIndex, item) in $ctrl.node['#children']" ng-if="tabIndex === $ctrl.selectedTab">
+  <div class="af-gui-tabset-panel" ng-repeat="(tabIndex, item) in $ctrl.node['#children']" ng-if="tabIndex === $ctrl.selectedTab && $ctrl.isTab(item)">
     <af-gui-container node="item" entity-name="$ctrl.entityName" data-entity="{{ $ctrl.getDataEntity() }}" ></af-gui-container>
   </div>
 </div>

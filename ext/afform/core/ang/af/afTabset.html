@@ -1,6 +1,16 @@
 <ul role="tablist" class="nav crm-tab-list" ng-class="$ctrl.isVertical ? 'nav-pills nav-stacked' : 'nav-tabs'">
-  <li ng-repeat="tab in $ctrl.tabs" role="tab" class="crm-tab-button" data-name="{{:: tab.name }}" ng-class="{active: tab.name === $ctrl.selectedTab}">
-    <a href ng-click="$ctrl.selectTab(tab.name)">
+  <li ng-repeat="tab in $ctrl.tabs" ng-switch="tab.type || 'tab'" role="{{:: tab.isTab() ? 'tab' : 'presentation' }}" class="crm-tab-button af-tab-item-{{:: tab.type || 'tab' }}" data-name="{{:: tab.name }}" ng-class="{active: tab.name === $ctrl.selectedTab}">
+    <span ng-switch-when="divider" class="af-tab-divider" role="separator"></span>
+    <span ng-switch-when="heading" class="af-tab-heading">
+      <i ng-if="tab.icon" class="crm-i {{ tab.icon }}" role="img" aria-hidden="true"></i>
+      {{ tab.title }}
+    </span>
+    <a ng-switch-when="link" ng-href="{{:: tab.getUrl() }}" ng-attr-target="{{:: tab.target || undefined }}" ng-attr-rel="{{:: tab.target === '_blank' ? 'noopener noreferrer' : undefined }}">
+      <i ng-if="tab.icon" class="crm-i {{ tab.icon }}" role="img" aria-hidden="true"></i>
+      {{ tab.title }}
+      <i ng-if="tab.target === '_blank'" class="crm-i fa-external-link" role="img" aria-hidden="true"></i>
+    </a>
+    <a ng-switch-default href ng-click="$ctrl.selectTab(tab.name)">
       <i ng-if="tab.icon" class="crm-i {{ tab.icon }}" role="img" aria-hidden="true"></i>
       {{ tab.title }}
       <span class="badge">{{ tab.count }}</span>

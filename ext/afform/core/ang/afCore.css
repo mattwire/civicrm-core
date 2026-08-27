@@ -189,6 +189,20 @@ af-search-param-sets dl > div > dt {
 .crm-tabset-vertical > .crm-buttons {
   flex: 0 0 100%;
 }
+/* Non-tab nav items: dividers and section headings group a long nav. */
+.crm-tab-list > .af-tab-item-divider {
+  border-top: 1px solid var(--crm-border-color, #cccccc);
+  margin: 0.5rem 0;
+}
+.crm-tab-list > .af-tab-item-heading > .af-tab-heading {
+  display: block;
+  padding: 0.5rem 15px 0.25rem;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
 /* Themes reset the bootstrap `.nav-pills` active background, which a sidebar nav needs. */
 .crm-tabset-vertical > .crm-tab-list > .crm-tab-button.active > a,
 .crm-tabset-vertical > .crm-tab-list > .crm-tab-button.active > a:hover,

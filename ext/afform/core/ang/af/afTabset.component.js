@@ -56,8 +56,9 @@
               this.selectTab(rememberedName);
             }
           }
-          if (!this.selectedTab && this.tabs.length) {
-            this.selectTab(this.tabs[0].name);
+          const firstTab = this.tabs.find((tab) => tab.isTab());
+          if (!this.selectedTab && firstTab) {
+            this.selectTab(firstTab.name);
           }
         });
 
@@ -78,7 +79,7 @@
       this.selectTab = (tabName) => {
         const newIndex = this.findTabIndex(tabName);
         // Ignore a tab that doesn't exist, e.g. a stale url or remembered selection
-        if (newIndex < 0) {
+        if (newIndex < 0 || !this.tabs[newIndex].isTab()) {
           return;
         }
         const currentIndex = this.findTabIndex(this.selectedTab);
@@ -95,27 +96,28 @@
 
       this.findTabIndex = (tabName) => this.tabs.findIndex((tab) => tab.name === tabName);
 
-      this.hasPrevious = () => {
-        const currentIndex = this.findTabIndex(this.selectedTab);
-        return 0 < currentIndex;
+      // Headings, dividers and links sit in the nav but cannot be navigated to.
+      this.findAdjacentTab = (step) => {
+        let index = this.findTabIndex(this.selectedTab) + step;
+        while (this.tabs[index] && !this.tabs[index].isTab()) {
+          index += step;
+        }
+        return this.tabs[index];
       };
 
-      this.hasNext = () => {
-        const currentIndex = this.findTabIndex(this.selectedTab);
-        return currentIndex < this.tabs.length - 1;
-      };
+      this.hasPrevious = () => !!this.findAdjacentTab(-1);
+
+      this.hasNext = () => !!this.findAdjacentTab(1);
 
       this.goToNext = () => {
-        const currentIndex = this.findTabIndex(this.selectedTab);
-        const nextTab = this.tabs[currentIndex + 1];
+        const nextTab = this.findAdjacentTab(1);
         if (nextTab) {
           this.selectTab(nextTab.name);
         }
       };
 
       this.goToPrevious = () => {
-        const currentIndex = this.findTabIndex(this.selectedTab);
-        const previousTab = this.tabs[currentIndex - 1];
+        const previousTab = this.findAdjacentTab(-1);
         if (previousTab) {
           this.selectTab(previousTab.name);
         }
@@ -143,6 +145,10 @@
         icon: '@',
         count: '@',
         name: '@',
+        type: '@',
+        path: '@',
+        href: '@',
+        target: '@',
       },
       // Transclude allows the tab scope to be accessed from the inner html as $parent
       transclude: true,
@@ -152,10 +158,15 @@
         scope.name = scope.name || 'tab' + tabNumber++;
         scope.afTabsetCtrl = afTabsetCtrl;
         scope.findInvalid = () => element.find('.ng-invalid');
+        // Only a plain tab owns a panel; the other types are nav decoration or navigate away.
+        scope.isTab = () => !scope.type || scope.type === 'tab';
+        // `path` is internal and must go through CRM.url() because the CMS, not CiviCRM,
+        // decides what a CiviCRM path looks like. `href` is used verbatim.
+        scope.getUrl = () => scope.href || (scope.path ? CRM.url(scope.path) : '');
         // Render on first selection, then keep the contents alive so that tab state
         // and unsaved input survive switching away and back.
-        scope.rendered = !afTabsetCtrl.isLazy();
-        if (!scope.rendered) {
+        scope.rendered = scope.isTab() && !afTabsetCtrl.isLazy();
+        if (scope.isTab() && !scope.rendered) {
           const stopWatching = scope.$watch(() => afTabsetCtrl.selectedTab === scope.name, (isSelected) => {
             if (isSelected) {
               scope.rendered = true;
