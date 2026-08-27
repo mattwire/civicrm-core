@@ -1,5 +1,5 @@
 <ul role="tablist" class="nav crm-tab-list" ng-class="$ctrl.isVertical ? 'nav-pills nav-stacked' : 'nav-tabs'">
-  <li ng-repeat="tab in $ctrl.tabs" ng-if="tab.isVisible()" ng-switch="tab.type || 'tab'" role="{{:: tab.isTab() ? 'tab' : 'presentation' }}" class="crm-tab-button af-tab-item-{{:: tab.type || 'tab' }}" data-name="{{:: tab.name }}" ng-class="{active: tab.name === $ctrl.selectedTab}">
+  <li ng-repeat="tab in $ctrl.tabs" ng-if="$ctrl.isNavItemVisible($index)" ng-switch="tab.type || 'tab'" role="{{:: tab.isTab() ? 'tab' : 'presentation' }}" class="crm-tab-button af-tab-item-{{:: tab.type || 'tab' }}" data-name="{{:: tab.name }}" ng-class="{active: tab.name === $ctrl.selectedTab}">
     <span ng-switch-when="divider" class="af-tab-divider" role="separator"></span>
     <span ng-switch-when="heading" class="af-tab-heading">
       <i ng-if="tab.icon" class="crm-i {{ tab.icon }}" role="img" aria-hidden="true"></i>

@@ -100,6 +100,43 @@
       // and neither can a tab the user lacks the permission for.
       this.isSelectable = (tab) => tab.isTab() && tab.isVisible();
 
+      // Whether an item is worth a row in the nav. Permission-gated items drop out, and
+      // once they have, the decoration around them can be left labelling or separating
+      // nothing, which reads as a mistake in the form rather than as a hidden item.
+      this.isNavItemVisible = (index) => {
+        const tab = this.tabs[index];
+        if (!tab.isVisible()) {
+          return false;
+        }
+        // A heading labels the items below it, as far as the next heading or divider.
+        if (tab.type === 'heading') {
+          for (let i = index + 1; i < this.tabs.length; i++) {
+            if (this.tabs[i].type === 'heading' || this.tabs[i].type === 'divider') {
+              return false;
+            }
+            if (this.tabs[i].isVisible()) {
+              return true;
+            }
+          }
+          return false;
+        }
+        // A divider needs something left to separate on either side of it.
+        if (tab.type === 'divider') {
+          return this.hasContentBeside(index, -1) && this.hasContentBeside(index, 1);
+        }
+        return true;
+      };
+
+      this.hasContentBeside = (index, step) => {
+        for (let i = index + step; i >= 0 && i < this.tabs.length; i += step) {
+          // Another divider is not content; skip past it.
+          if (this.tabs[i].type !== 'divider' && this.isNavItemVisible(i)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
       this.findAdjacentTab = (step) => {
         let index = this.findTabIndex(this.selectedTab) + step;
         while (this.tabs[index] && !this.isSelectable(this.tabs[index])) {
