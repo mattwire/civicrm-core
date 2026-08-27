@@ -693,7 +693,9 @@ class CRM_Utils_System_Standalone extends CRM_Utils_System_Base {
     ];
 
     // tweaks when in iframe mode
-    if (defined('CIVICRM_IFRAME') && CIVICRM_IFRAME) {
+    // A same-origin frame keeps the ordinary session, so it must not be handed a
+    // separate cookie name. @see \Civi\Standalone\WebEntrypoint::invokeIframeMode()
+    if (defined('CIVICRM_IFRAME') && CIVICRM_IFRAME && !defined('CIVICRM_IFRAME_SAME_ORIGIN')) {
       $params['name'] .= 'IFRAME';
 
       if (!empty($_SERVER['HTTPS'])) {

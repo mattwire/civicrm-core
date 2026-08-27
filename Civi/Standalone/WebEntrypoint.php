@@ -148,12 +148,25 @@ class WebEntrypoint {
   protected static function invokeIframeMode(): void {
     define('CIVICRM_IFRAME', 1);
 
-    // Do not accept cookies.
-    // The whole issue is that browsers disagree on cookie-handling for embedded iframe content.
-    // (Ex: Safari 16 doesn't send cookies; but Firefox 118 does.)
-    // This means that `iframe.php` has the same cookie-less behavior for all browsers/users/tools.
-    foreach (array_keys($_COOKIE) as $cookie) {
-      unset($_COOKIE[$cookie]);
+    // A same-origin frame is the site framing itself. First-party cookies are sent
+    // by every browser in that case, so the disagreement described below does not
+    // arise and there is no reason to give up the user's identity.
+    //
+    // `Sec-Fetch-Site` is set by the browser and is a forbidden header name, so page
+    // javascript cannot make a cross-site frame claim to be same-origin. A client that
+    // can set it arbitrarily is not a browser being tricked, and gains nothing it could
+    // not already do with the same cookie on an ordinary request.
+    if (($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '') === 'same-origin') {
+      define('CIVICRM_IFRAME_SAME_ORIGIN', 1);
+    }
+    else {
+      // Do not accept cookies.
+      // The whole issue is that browsers disagree on cookie-handling for embedded iframe content.
+      // (Ex: Safari 16 doesn't send cookies; but Firefox 118 does.)
+      // This means that `iframe.php` has the same cookie-less behavior for all browsers/users/tools.
+      foreach (array_keys($_COOKIE) as $cookie) {
+        unset($_COOKIE[$cookie]);
+      }
     }
 
     // Default links to stay in iframe mode
