@@ -15,6 +15,8 @@
       $scope.fieldTitles = [];
       $scope.blockList = [];
       $scope.blockTitles = [];
+      $scope.formList = [];
+      $scope.formTitles = [];
       $scope.elementList = [];
       $scope.elementTitles = [];
 
@@ -26,6 +28,7 @@
         const search = $scope.controls.fieldSearch ? $scope.controls.fieldSearch.toLowerCase() : null;
         buildFieldList(search);
         buildBlockList(search);
+        buildFormList(search);
         buildElementList(search);
       };
 
@@ -97,6 +100,23 @@
             const item = {"#tag": directive};
             $scope.blockList.push(item);
             $scope.blockTitles.push(block.title);
+          }
+        });
+      }
+
+      // A site may hold hundreds of forms, so the palette offers a placeholder per
+      // embeddable type and the form itself is chosen once the placeholder is placed.
+      function buildFormList(search) {
+        $scope.formList.length = 0;
+        $scope.formTitles.length = 0;
+        const placeholders = [
+          {type: 'form', title: ts('Submission Form')},
+          {type: 'search', title: ts('Search Form')},
+        ];
+        placeholders.forEach((placeholder) => {
+          if (!search || placeholder.title.toLowerCase().includes(search)) {
+            $scope.formList.push({'#tag': 'af-embed', 'form-type': placeholder.type});
+            $scope.formTitles.push(placeholder.title);
           }
         });
       }

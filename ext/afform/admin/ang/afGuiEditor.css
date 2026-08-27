@@ -779,3 +779,10 @@ body.af-gui-dragging {
   letter-spacing: 0.05em;
   opacity: 0.75;
 }
+
+#afGuiEditor .af-gui-embedded-form-body {
+  border: 1px dotted gray;
+  color: gray;
+  padding: 2em;
+  text-align: center;
+}

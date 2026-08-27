@@ -35,7 +35,7 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
   protected $skipEntities = [];
 
   public function _run(\Civi\Api4\Generic\Result $result) {
-    $info = ['entities' => [], 'fields' => [], 'blocks' => []];
+    $info = ['entities' => [], 'fields' => [], 'blocks' => [], 'embeddedForms' => []];
     $entities = [];
     $newForm = empty($this->definition['name']);
 
@@ -137,6 +137,11 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
             ->execute()->first();
           if ($embeddedForm['type'] === 'block') {
             $info['blocks'][$blockTag] = $embeddedForm;
+          }
+          else {
+            // A whole form embedded in another form is shown on the canvas as a
+            // placeholder, so only its identity is needed, not its layout or fields.
+            $info['embeddedForms'][$blockTag] = \CRM_Utils_Array::subset($embeddedForm, ['name', 'title', 'type', 'directive_name']);
           }
           if (!empty($embeddedForm['join_entity'])) {
             $entities = array_unique(array_merge($entities, [$embeddedForm['join_entity']]));
@@ -253,6 +258,7 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
       }
     }
     $info['blocks'] = array_values($info['blocks']);
+    $info['embeddedForms'] = array_values($info['embeddedForms']);
 
     $result[] = $info;
   }
@@ -311,6 +317,10 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
       ],
       [
         'name' => 'blocks',
+        'data_type' => 'Array',
+      ],
+      [
+        'name' => 'embeddedForms',
         'data_type' => 'Array',
       ],
       [

@@ -67,4 +67,87 @@ class CiviAfformAdminAfformAdminMetaTest extends \PHPUnit\Framework\TestCase imp
     $this->assertArrayNotHasKey('dfk_entities', array_filter($fields['contact_id']));
   }
 
+  /**
+   * A form or search Afform can be embedded whole in another form, so the editor
+   * needs them listed separately from blocks, which have different semantics.
+   */
+  public function testOnlyFormsUsedInTheLayoutAreLoadedWithIt():void {
+    $this->createEmbedFixtures('<div class="af-container"><afform-test-embed-guest></afform-test-embed-guest></div>');
+    try {
+      $info = \Civi\Api4\Afform::loadAdminData(FALSE)
+        ->setDefinition(['name' => 'afformTestEmbedHost'])
+        ->execute()->single();
+
+      $directives = array_column($info['embeddedForms'], 'directive_name');
+      // The form this one embeds has to come with it, or the canvas cannot draw it.
+      $this->assertSame(['afform-test-embed-guest'], $directives);
+      // Everything else is found through the autocomplete, so a site with hundreds of
+      // forms does not send all of them to the editor.
+      $this->assertNotContains('afform-test-embed-bystander', $directives);
+    }
+    finally {
+      $this->revertEmbedFixtures();
+    }
+  }
+
+  public function testEmbeddableFormAutocompleteOffersOnlyStandaloneForms():void {
+    $this->createEmbedFixtures('<div class="af-container"></div>');
+    try {
+      $searchOnly = array_column((array) \Civi\Api4\Afform::autocomplete(FALSE)
+        ->setFormName('afformAdmin')
+        ->setFieldName('autocompleteEmbeddedForm')
+        ->setFilters(['type' => 'search'])
+        ->setInput('afformTestEmbed')
+        ->execute(), 'id');
+      $this->assertContains('afformTestEmbedGuest', $searchOnly);
+      $this->assertNotContains('afformTestEmbedHost', $searchOnly);
+
+      // With no type named, both standalone types are offered and nothing else. A block
+      // is inlined into its parent's entities and a dashboard is a page in its own right,
+      // so neither can be embedded.
+      $anyType = array_column((array) \Civi\Api4\Afform::autocomplete(FALSE)
+        ->setFormName('afformAdmin')
+        ->setFieldName('autocompleteEmbeddedForm')
+        ->setInput('afformTestEmbed')
+        ->execute(), 'id');
+      $this->assertContains('afformTestEmbedGuest', $anyType);
+      $this->assertContains('afformTestEmbedHost', $anyType);
+      $this->assertNotContains('afformTestEmbedBlock', $anyType);
+    }
+    finally {
+      $this->revertEmbedFixtures();
+    }
+  }
+
+  private function createEmbedFixtures(string $hostLayout):void {
+    $forms = [
+      'afformTestEmbedHost' => ['form', $hostLayout],
+      'afformTestEmbedGuest' => ['search', '<div class="af-container"></div>'],
+      'afformTestEmbedBystander' => ['form', '<div class="af-container"></div>'],
+      'afformTestEmbedBlock' => ['block', '<div class="af-container"></div>'],
+    ];
+    foreach ($forms as $name => [$type, $layout]) {
+      $create = \Civi\Api4\Afform::create(FALSE)
+        ->addValue('name', $name)
+        ->addValue('title', $name)
+        ->addValue('type', $type)
+        ->addValue('layout', $layout);
+      if ($type === 'block') {
+        $create->addValue('entity_type', 'Individual');
+      }
+      $create->execute();
+    }
+  }
+
+  private function revertEmbedFixtures():void {
+    \Civi\Api4\Afform::revert(FALSE)
+      ->addWhere('name', 'IN', [
+        'afformTestEmbedHost',
+        'afformTestEmbedGuest',
+        'afformTestEmbedBystander',
+        'afformTestEmbedBlock',
+      ])
+      ->execute();
+  }
+
 }

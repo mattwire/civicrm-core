@@ -24,6 +24,14 @@
           </div>
         </div>
       </div>
+      <div ng-if="formList.length">
+        <label>{{:: ts('Forms') }}</label>
+        <div ui-sortable="$ctrl.editor.getSortableOptions()" ui-sortable-update="buildPaletteLists" ng-model="formList">
+          <div ng-repeat="form in formList">
+            <div class="af-gui-palette-item">{{:: formTitles[$index] }}</div>
+          </div>
+        </div>
+      </div>
       <div ng-if="fieldList.length">
         <label>{{ ts('Extra Fields') }}</label>
         <div ui-sortable="$ctrl.editor.getSortableOptions()" ui-sortable-update="buildPaletteLists" ng-model="fieldList">

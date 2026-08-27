@@ -162,6 +162,14 @@ class AfformAutocompleteSubscriber extends AutoService implements EventSubscribe
         $apiRequest->addFilter('saved_search_id.name', $apiRequest->getFilters()['saved_search_id.name']);
         $apiRequest->addFilter('type', 'autocomplete');
         return;
+
+      case 'autocompleteEmbeddedForm':
+        // Only a form that stands alone on a page can be embedded in another: a block
+        // is inlined into its parent's entities, and a dashboard is a page in itself.
+        $formType = $apiRequest->getFilters()['type'] ?? NULL;
+        $formTypes = in_array($formType, ['form', 'search'], TRUE) ? [$formType] : ['form', 'search'];
+        $apiRequest->addWhere(['type', 'IN', $formTypes]);
+        return;
     }
   }
 

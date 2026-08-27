@@ -150,6 +150,7 @@
             }
           });
           CRM.afGuiEditor.blocks = {};
+          CRM.afGuiEditor.embeddedForms = {};
           CRM.afGuiEditor.searchDisplays = {};
         },
 
@@ -170,6 +171,10 @@
               }
               CRM.afGuiEditor.blocks[block.directive_name] = block;
             }
+          });
+          // Add forms which can be embedded whole, keyed on their directive name
+          (data.embeddedForms || []).forEach(function(form) {
+            CRM.afGuiEditor.embeddedForms[form.directive_name] = form;
           });
           // Add behavior data
           CRM.afGuiEditor.behaviors = CRM.afGuiEditor.behaviors || {};

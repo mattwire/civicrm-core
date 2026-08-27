@@ -385,6 +385,9 @@
         if (node['#tag'] && node['#tag'] in afGui.meta.blocks) {
           return 'container';
         }
+        if (node['#tag'] === 'af-embed' || (node['#tag'] && node['#tag'] in afGui.meta.embeddedForms)) {
+          return 'embeddedForm';
+        }
         if (node['#tag'] && afGui.meta.searchDisplayTags.includes(node['#tag'])) {
           return 'searchDisplay';
         }
