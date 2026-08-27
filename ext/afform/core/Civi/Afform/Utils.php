@@ -241,6 +241,42 @@ class Utils {
   }
 
   /**
+   * Map of afform type name => the base type whose behaviour it reuses.
+   *
+   * The editor and the admin api need to know how to treat a form: whether to
+   * offer entities, search displays, and so on. Reading that from the type's
+   * `grouping` lets an extension add a type without also having to be added by
+   * name everywhere those decisions are made.
+   *
+   * @return array
+   */
+  public static function getFormTypeBases(): array {
+    $bases = \Civi::cache('metadata')->get('afform_type_bases');
+    if ($bases === NULL) {
+      $bases = [];
+      $types = \Civi\Api4\OptionValue::get(FALSE)
+        ->addSelect('name', 'grouping')
+        ->addWhere('option_group_id.name', '=', 'afform_type')
+        ->execute();
+      foreach ($types as $type) {
+        $bases[$type['name']] = $type['grouping'] ?: $type['name'];
+      }
+      \Civi::cache('metadata')->set('afform_type_bases', $bases);
+    }
+    return $bases;
+  }
+
+  /**
+   * The base type whose editor behaviour the given afform type reuses.
+   *
+   * @param string|null $type
+   * @return string
+   */
+  public static function getFormTypeBase(?string $type): string {
+    return self::getFormTypeBases()[$type] ?? (string) $type;
+  }
+
+  /**
    * Permissions named by `<af-tab permission="...">` in a layout.
    *
    * `CRM.checkPerm()` can only answer for permissions the page declared, so these

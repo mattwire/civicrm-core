@@ -37,7 +37,7 @@
         $scope.fieldTitles.length = 0;
 
         // Fields can only be added to a submission form
-        if (this.editor.getFormType() !== 'form') {
+        if (this.editor.getFormTypeBase() !== 'form') {
           return;
         }
 
@@ -74,10 +74,11 @@
       const buildElementList = (search) => {
         $scope.elementList.length = 0;
         $scope.elementTitles.length = 0;
-        const formType = this.editor.getFormType();
+        // An element may target either the form's own type or the base type it derives from.
+        const formTypes = [this.editor.getFormType(), this.editor.getFormTypeBase()];
         Object.entries(afGui.meta.elements).forEach(([name, element]) => {
           if (
-            (!element.afform_type || element.afform_type.includes(formType)) &&
+            (!element.afform_type || formTypes.some(type => element.afform_type.includes(type))) &&
             name !== 'fieldset' && // Only shown on afGuiEntity tab
             (!search || name.includes(search) || element.title.toLowerCase().includes(search))) {
             const node = _.cloneDeep(element.element);

@@ -117,7 +117,7 @@
 
       function setEditorLayout() {
         editor.layout = {};
-        if (editor.getFormType() === 'form') {
+        if (editor.getFormTypeBase() === 'form') {
           editor.layout['#children'] = afGui.findRecursive(editor.afform.layout, {'#tag': 'af-form'})[0]['#children'];
         }
         else {
@@ -156,7 +156,7 @@
           loadNavigationMenu();
         }
 
-        if (editor.getFormType() === 'form') {
+        if (editor.getFormTypeBase() === 'form') {
           editor.allowEntityConfig = true;
           $scope.entities = _.mapValues(afGui.findRecursive(editor.layout['#children'], {'#tag': 'af-entity'}, 'name'), backfillEntityDefaults);
 
@@ -168,7 +168,7 @@
           }
         }
 
-        if (editor.getFormType() === 'block') {
+        if (editor.getFormTypeBase() === 'block') {
           editor.blockEntity = editor.afform.join_entity || editor.afform.entity_type || '*';
           $scope.entities[editor.blockEntity] = backfillEntityDefaults({
             type: editor.blockEntity,
@@ -177,7 +177,7 @@
           });
         }
 
-        else if (editor.getFormType() === 'search') {
+        else if (editor.getFormTypeBase() === 'search') {
           editor.searchDisplays = getSearchDisplaysOnForm();
         }
 
@@ -259,6 +259,12 @@
         return editor.afform.type;
       };
 
+      // The base type whose editor behaviour this form's type reuses, so that a type
+      // added by an extension does not have to be named in every check below.
+      this.getFormTypeBase = function() {
+        return afGui.meta.formTypeBases[editor.afform.type] || editor.afform.type;
+      };
+
       this.getFormTypeLabel = () => {
         const options = this.meta.afform_fields.type.options;
         return options.find(option => option.id === editor.afform.type).label;
@@ -285,7 +291,7 @@
         if (!Array.isArray(layout) || !layout.length) {
           return false;
         }
-        if (editor.getFormType() === 'form') {
+        if (editor.getFormTypeBase() === 'form') {
           return afGui.findRecursive(layout, {'#tag': 'af-form'}).length === 1;
         }
         return true;
@@ -303,10 +309,10 @@
             }
             editor.afform.layout = newLayout;
             setEditorLayout();
-            if (editor.getFormType() === 'form') {
+            if (editor.getFormTypeBase() === 'form') {
               $scope.entities = _.mapValues(afGui.findRecursive(editor.layout['#children'], {'#tag': 'af-entity'}, 'name'), backfillEntityDefaults);
             }
-            else if (editor.getFormType() === 'search') {
+            else if (editor.getFormTypeBase() === 'search') {
               editor.searchDisplays = getSearchDisplaysOnForm();
             }
             editor.markupEditMode = false;
@@ -793,7 +799,7 @@
       // Triggered by afGuiContainer.removeElement
       this.onRemoveElement = function() {
         // Keep this.searchDisplays in-sync when deleteing stuff from the form
-        if (editor.getFormType() === 'search') {
+        if (editor.getFormTypeBase() === 'search') {
           const current = getSearchDisplaysOnForm();
           Object.keys(editor.searchDisplays).forEach(key => {
             if (!(key in current)) {

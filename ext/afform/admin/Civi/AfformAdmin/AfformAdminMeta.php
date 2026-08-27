@@ -346,6 +346,8 @@ class AfformAdminMeta {
 
       $searchDisplayTags = Utils::getSearchDisplayTags();
 
+      $formTypeBases = Utils::getFormTypeBases();
+
       // Allow data to be modified by event listeners
       $data = [
         // @see afform-entity-php/mixin.php
@@ -355,6 +357,7 @@ class AfformAdminMeta {
         'permissions' => &$permissions,
         'dateRanges' => &$dateRanges,
         'searchDisplayTags' => &$searchDisplayTags,
+        'formTypeBases' => &$formTypeBases,
       ];
       $event = GenericHookEvent::create($data);
       \Civi::dispatcher()->dispatch('civi.afform_admin.metadata', $event);

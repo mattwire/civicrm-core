@@ -48,7 +48,7 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
     }
     else {
       // Create new blank afform
-      switch ($this->definition['type']) {
+      switch (Utils::getFormTypeBase($this->definition['type'])) {
         case 'form':
           $info['definition'] = $this->definition + [
             'title' => '',
@@ -105,6 +105,8 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
     }
 
     $getFieldsMode = 'create';
+    // A type added by an extension declares which base type's behaviour it reuses.
+    $formTypeBase = Utils::getFormTypeBase($info['definition']['type'] ?? NULL);
 
     // Generate list of possibly embedded afform tags to search for
     $allAfforms = \Civi::service('afform_scanner')->findFilePaths();
@@ -151,7 +153,7 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
       }
     };
 
-    if ($info['definition']['type'] === 'form') {
+    if ($formTypeBase === 'form') {
       if ($newForm) {
         $entities[] = $this->entity;
         $defaultEntity = AfformAdminMeta::getMetadata()['entities'][$this->entity] ?? [];
@@ -167,7 +169,7 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
       $this->loadAvailableBlocks($entities, $info);
     }
 
-    if ($info['definition']['type'] === 'block') {
+    if ($formTypeBase === 'block') {
       $blockEntity = $info['definition']['join_entity'] ?? $info['definition']['entity_type'] ?? NULL;
       if ($blockEntity && $blockEntity !== '*') {
         $entities[] = $blockEntity;
@@ -176,7 +178,7 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
       $this->loadAvailableBlocks($entities, $info);
     }
 
-    if ($info['definition']['type'] === 'search') {
+    if ($formTypeBase === 'search') {
       $getFieldsMode = 'get';
       if ($newForm) {
         [$searchName, $displayName] = array_pad(explode('.', $this->entity ?? ''), 2, '');

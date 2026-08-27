@@ -77,7 +77,7 @@
       };
 
       this.isSearch = function() {
-        return ctrl.editor.getFormType() === 'search';
+        return ctrl.editor.getFormTypeBase() === 'search';
       };
 
       this.canBeRange = function() {
@@ -448,7 +448,7 @@
         return ctrl.hasDefaultValue && ctrl.getDefn().data_type !== 'Boolean' && ctrl.defaultDateType() === 'fixed';
       };
 
-      this.allowTokensInDefault = () => this.editor.getFormType() === 'form' && ['Text', 'TextArea', 'Hidden', 'DisplayOnly'].includes(this.fieldDefn.input_type);
+      this.allowTokensInDefault = () => this.editor.getFormTypeBase() === 'form' && ['Text', 'TextArea', 'Hidden', 'DisplayOnly'].includes(this.fieldDefn.input_type);
 
       this.defaultDateType = function(newValue) {
         if (arguments.length) {

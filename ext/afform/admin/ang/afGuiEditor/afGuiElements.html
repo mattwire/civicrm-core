@@ -1,5 +1,5 @@
 <form class="" ng-if="!$ctrl.entity.loading">
-  <div class="alert alert-warning" ng-if=":: $ctrl.editor.getFormType() === 'form'">
+  <div class="alert alert-warning" ng-if=":: $ctrl.editor.getFormTypeBase() === 'form'">
     {{:: ts('Note: Extra fields are submitted with the form, but not saved to the CiviCRM database.')}}
   </div>
   <fieldset class="af-gui-entity-palette">
