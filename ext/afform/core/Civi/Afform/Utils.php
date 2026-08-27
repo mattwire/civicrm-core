@@ -241,6 +241,26 @@ class Utils {
   }
 
   /**
+   * Permissions named by `<af-tab permission="...">` in a layout.
+   *
+   * `CRM.checkPerm()` can only answer for permissions the page declared, so these
+   * have to be advertised on the form's Angular module or every gated tab would
+   * read as denied.
+   *
+   * @param string $html
+   * @return string[]
+   */
+  public static function findTabPermissions(string $html): array {
+    // Cheap check first: parsing every layout on every module build is not free.
+    if (!str_contains($html, 'permission=')) {
+      return [];
+    }
+    $layout = (new \CRM_Afform_ArrayHtml())->convertHtmlToArray($html);
+    $tabs = \CRM_Utils_Array::findAll($layout ?? [], ['#tag' => 'af-tab']);
+    return array_values(array_unique(array_filter(array_column($tabs, 'permission'))));
+  }
+
+  /**
    * Names of the afforms embedded in a layout, resolved from their directive tags.
    *
    * @param string $html

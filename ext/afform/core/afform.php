@@ -178,6 +178,7 @@ function _afform_hook_civicrm_angularModules($e) {
       'exports' => [
         $afform['directive_name'] => 'E',
       ],
+      'permissions' => \Civi\Afform\Utils::findTabPermissions($afform['layout'] ?? ''),
     ];
   }
 

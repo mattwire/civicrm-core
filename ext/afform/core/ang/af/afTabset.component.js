@@ -56,7 +56,7 @@
               this.selectTab(rememberedName);
             }
           }
-          const firstTab = this.tabs.find((tab) => tab.isTab());
+          const firstTab = this.tabs.find((tab) => this.isSelectable(tab));
           if (!this.selectedTab && firstTab) {
             this.selectTab(firstTab.name);
           }
@@ -79,7 +79,7 @@
       this.selectTab = (tabName) => {
         const newIndex = this.findTabIndex(tabName);
         // Ignore a tab that doesn't exist, e.g. a stale url or remembered selection
-        if (newIndex < 0 || !this.tabs[newIndex].isTab()) {
+        if (newIndex < 0 || !this.isSelectable(this.tabs[newIndex])) {
           return;
         }
         const currentIndex = this.findTabIndex(this.selectedTab);
@@ -96,10 +96,13 @@
 
       this.findTabIndex = (tabName) => this.tabs.findIndex((tab) => tab.name === tabName);
 
-      // Headings, dividers and links sit in the nav but cannot be navigated to.
+      // Headings, dividers and links sit in the nav but cannot be navigated to,
+      // and neither can a tab the user lacks the permission for.
+      this.isSelectable = (tab) => tab.isTab() && tab.isVisible();
+
       this.findAdjacentTab = (step) => {
         let index = this.findTabIndex(this.selectedTab) + step;
-        while (this.tabs[index] && !this.tabs[index].isTab()) {
+        while (this.tabs[index] && !this.isSelectable(this.tabs[index])) {
           index += step;
         }
         return this.tabs[index];
@@ -149,6 +152,7 @@
         path: '@',
         href: '@',
         target: '@',
+        permission: '@',
       },
       // Transclude allows the tab scope to be accessed from the inner html as $parent
       transclude: true,
@@ -160,12 +164,15 @@
         scope.findInvalid = () => element.find('.ng-invalid');
         // Only a plain tab owns a panel; the other types are nav decoration or navigate away.
         scope.isTab = () => !scope.type || scope.type === 'tab';
+        // Hiding an item the user has no use for. Not a security boundary: whatever the
+        // tab contains enforces its own permissions server-side.
+        scope.isVisible = () => !scope.permission || CRM.checkPerm(scope.permission);
         // `path` is internal and must go through CRM.url() because the CMS, not CiviCRM,
         // decides what a CiviCRM path looks like. `href` is used verbatim.
         scope.getUrl = () => scope.href || (scope.path ? CRM.url(scope.path) : '');
         // Render on first selection, then keep the contents alive so that tab state
         // and unsaved input survive switching away and back.
-        scope.rendered = scope.isTab() && !afTabsetCtrl.isLazy();
+        scope.rendered = scope.isTab() && scope.isVisible() && !afTabsetCtrl.isLazy();
         if (scope.isTab() && !scope.rendered) {
           const stopWatching = scope.$watch(() => afTabsetCtrl.selectedTab === scope.name, (isSelected) => {
             if (isSelected) {

@@ -46,6 +46,8 @@
         {id: 'href', label: ts('External url')},
       ];
 
+      this.permissions = afGui.meta.permissions;
+
       // Only a tab holds content; the other types are nav-only.
       this.isTab = (item) => !item.type || item.type === 'tab';
 

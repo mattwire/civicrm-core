@@ -38,6 +38,13 @@
   </a>
 </li>
 
+<li ng-if="tab.type !== 'divider'" title="{{:: ts('Hide this item from users who do not have this permission') }}">
+  <form ng-click="$event.stopPropagation()" class="af-gui-field-select-in-dropdown form-inline">
+    <label for="af-gui-tab-permission">{{:: ts('Permission:') }}</label>
+    <input id="af-gui-tab-permission" class="form-control" ng-model="tab.permission" crm-ui-select="{data: $ctrl.permissions, allowClear: true, placeholder: ts('Always visible')}">
+  </form>
+</li>
+
 <li ng-if="$ctrl.searchDisplays[tabIndex].length">
 <form ng-click="$event.stopPropagation()" class="af-gui-field-select-in-dropdown form-inline">
   <label for="af-gui-tab-count">{{:: ts('Count:') }}</label>
