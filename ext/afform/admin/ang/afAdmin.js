@@ -8,7 +8,8 @@
         reloadOnSearch: false,
         templateUrl: '~/afAdmin/afAdminList.html'
       });
-      $routeProvider.when('/create/:type/:entity', {
+      // The entity is optional: not every form type is created around one.
+      $routeProvider.when('/create/:type/:entity?', {
         controller: 'afAdminGui',
         template: '<af-gui-editor mode="create" data="$ctrl.data" entity="$ctrl.entity"></af-gui-editor>',
         resolve: {

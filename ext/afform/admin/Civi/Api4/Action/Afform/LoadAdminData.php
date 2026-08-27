@@ -182,9 +182,11 @@ class LoadAdminData extends \Civi\Api4\Generic\AbstractAction {
       $getFieldsMode = 'get';
       if ($newForm) {
         [$searchName, $displayName] = array_pad(explode('.', $this->entity ?? ''), 2, '');
-        $displayTags = [
+        // A search-like form is normally created around an existing display, but it
+        // need not be: a dashboard starts as an empty page and gains displays later.
+        $displayTags = strlen($searchName) ? [
           ['search-name' => $searchName, 'display-name' => $displayName],
-        ];
+        ] : [];
       }
       else {
         $displayTypes = Utils::getSearchDisplayTags();
