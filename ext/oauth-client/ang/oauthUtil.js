@@ -22,21 +22,25 @@
       },
       controllerAs: 'oauthUtilGrantCtrl',
       controller: function($scope, $parse, crmBlocker, crmApi4, crmStatus) {
-        var block = crmBlocker();
-        var ctrl = this;
-        ctrl.authCode = function(clientId) {
-          var confirmOpt = {
+        const block = crmBlocker();
+        // A `tag` re-connects the record that tag points at, e.g. "MailSettings:12".
+        this.authCode = (clientId, tag) => {
+          const confirmOpt = {
             message: ts('You are about to be redirected to an external site.'),
             options: {no: ts('Cancel'), yes: ts('Continue')}
           };
           CRM.confirm(confirmOpt)
-            .on('crmConfirm:yes', function(){
-              var going = crmApi4('OAuthClient', 'authorizationCode', {
+            .on('crmConfirm:yes', () => {
+              const params = {
                 'landingUrl': window.location.href,
                 'where': [['id', '=', clientId]]
-              }).then(function(r){
-                window.location = r[0].url;
-              });
+              };
+              if (tag) {
+                params.tag = tag;
+                params.prompt = 'select_account';
+              }
+              const going = crmApi4('OAuthClient', 'authorizationCode', params)
+                .then((r) => window.location = r[0].url);
               return block(crmStatus({start: ts('Redirecting...'), success: ts('Redirecting...')}, going));
             });
         };
