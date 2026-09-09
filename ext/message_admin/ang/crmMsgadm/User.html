@@ -3,39 +3,46 @@
   <span crm-ui-order="{var: 'myOrder', defaults: ['+msg_title']}"></span>
 
   <div ng-include="'~/crmMsgadm/ListNav.html'"></div>
+  <div id="crm-msgadm-panel" role="tabpanel" aria-labelledby="crm-msgadm-tab-user">
+    <div class="help">
+      <span ng-bind-html="ts('Message templates allow you to easily create similar emails or letters on a recurring basis. Messages used for membership renewal reminders, as well as event and activity related reminders should be created via <a href=\'%1\'>Schedule Reminders</a>.', {1: crmUrl('civicrm/admin/scheduleReminders', 'reset=1')})"></span>
+      <span ng-if="checkPerm('access CiviMail')" ng-bind-html="ts('You can also use message templates for CiviMail (bulk email) content. However, subscribe, unsubscribe and opt-out messages are configured at <a href=\'%1\'>Administer > CiviMail > Headers, Footers and Automated Messages</a>.', {1: crmUrl('civicrm/admin/component', 'reset=1')})"></span>
+      <a crm-ui-help="hs({title:ts('User-Driven Messages'), id:'id-intro', file:'CRM/Admin/Page/MessageTemplates'})"></a>
+    </div>
 
-  <div class="form-inline">
-    <label for="msgtpl-filter-text">{{:: ts('Filter') }}</label>
-    <input class="form-control" type="search" id="msgtpl-filter-text" ng-model="filters.text">
+    <div class="form-inline">
+      <label for="msgtpl-filter-text">{{:: ts('Filter') }}</label>
+      <input class="form-control" type="search" id="msgtpl-filter-text" ng-model="filters.text">
 
-    <a class="btn btn-primary pull-right" ng-href="{{crmUrl('civicrm/admin/messageTemplates/add', 'action=add&reset=1')}}">
-      <i class="crm-i fa-plus" role="img" aria-hidden="true"></i>
-      {{:: ts('Add Message Template') }}
-    </a>
+      <a class="btn btn-primary pull-right" ng-href="{{crmUrl('civicrm/admin/messageTemplates/add', 'action=add&reset=1')}}">
+        <i class="crm-i fa-plus" role="img" aria-hidden="true"></i>
+        {{:: ts('Add Message Template') }}
+      </a>
+    </div>
+
+    <table class="table table-striped">
+      <thead>
+      <tr>
+        <th><a crm-ui-order-by="[myOrder, 'msg_title']">{{:: ts('Title') }}</a></th>
+        <th><a crm-ui-order-by="[myOrder, 'msg_subject']">{{:: ts('Subject') }}</a></th>
+        <th><a crm-ui-order-by="[myOrder, 'is_acctive']">{{:: ts('Enabled?') }}</a></th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr ng-repeat="record in $ctrl.records | filter:filters.text | orderBy:myOrder.get()">
+        <td>{{record.msg_title}}</td>
+        <td>{{record.msg_subject}}</td>
+        <td>{{record.is_active ? ts('Yes') : ts('No')}}</td>
+        <td class="text-right">
+          <a class="btn btn-xs btn-default" ng-href="{{$ctrl.editUrl(record, 'legacy')}}">{{:: ts('Edit') }}</a>
+          <a class="btn btn-xs btn-default" ng-click="$ctrl.toggle(record)" ng-if="!!record.is_active">{{:: ts('Disable') }}</a>
+          <a class="btn btn-xs btn-default" ng-click="$ctrl.toggle(record)" ng-if="!record.is_active">{{:: ts('Enable') }}</a>
+          <a class="btn btn-xs btn-danger" crm-confirm="{type: 'delete', obj: record}" on-yes="$ctrl.delete(record)">{{:: ts('Delete') }}</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
   </div>
-
-  <table class="table table-striped">
-    <thead>
-    <tr>
-      <th><a crm-ui-order-by="[myOrder, 'msg_title']">{{:: ts('Title') }}</a></th>
-      <th><a crm-ui-order-by="[myOrder, 'msg_subject']">{{:: ts('Subject') }}</a></th>
-      <th><a crm-ui-order-by="[myOrder, 'is_acctive']">{{:: ts('Enabled?') }}</a></th>
-      <th></th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr ng-repeat="record in $ctrl.records | filter:filters.text | orderBy:myOrder.get()">
-      <td>{{record.msg_title}}</td>
-      <td>{{record.msg_subject}}</td>
-      <td>{{record.is_active ? ts('Yes') : ts('No')}}</td>
-      <td class="text-right">
-        <a class="btn btn-xs btn-default" ng-href="{{$ctrl.editUrl(record, 'legacy')}}">{{:: ts('Edit') }}</a>
-        <a class="btn btn-xs btn-default" ng-click="$ctrl.toggle(record)" ng-if="!!record.is_active">{{:: ts('Disable') }}</a>
-        <a class="btn btn-xs btn-default" ng-click="$ctrl.toggle(record)" ng-if="!record.is_active">{{:: ts('Enable') }}</a>
-        <a class="btn btn-xs btn-danger" crm-confirm="{type: 'delete', obj: record}" on-yes="$ctrl.delete(record)">{{:: ts('Delete') }}</a>
-      </td>
-    </tr>
-    </tbody>
-  </table>
 
 </div>
