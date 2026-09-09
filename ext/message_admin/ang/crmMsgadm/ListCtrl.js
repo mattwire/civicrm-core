@@ -32,6 +32,8 @@
     });
 
     const $ctrl = this;
+    // Translation columns are only meaningful once the site has more than one language.
+    $ctrl.supportsTranslation = CRM.crmMsgadm.allLanguages && Object.keys(CRM.crmMsgadm.allLanguages).length > 1;
     const allRecords = [].concat(prefetch.records, (prefetch.translations || []).map(simpleKeys));
     $ctrl.records = allRecords.map((r) => {
       r._is_translation = (r.tx_language !== undefined);
