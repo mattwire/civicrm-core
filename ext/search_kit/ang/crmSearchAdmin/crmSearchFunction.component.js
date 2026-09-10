@@ -107,11 +107,12 @@
       };
 
       this.canAddArg = function() {
-        if (!ctrl.fn) {
+        // No param when the function takes no arguments at all (e.g. NOW)
+        const param = ctrl.fn && ctrl.getParam(ctrl.args.length);
+        if (!param) {
           return false;
         }
-        const param = ctrl.getParam(ctrl.args.length),
-          index = ctrl.fn.params.indexOf(param);
+        const index = ctrl.fn.params.indexOf(param);
         // TODO: Handle optional named params like "ORDER BY"
         if (param.name && param.optional) {
           return false;
@@ -163,7 +164,8 @@
             }
           }
           allowedTypes.forEach(type => {
-            const allowedFunctions = CRM.crmSearchAdmin.functions.filter(fn => fn.category === type && fn.params.length);
+            // The function wraps the current field, so it must have a param that accepts one
+            const allowedFunctions = CRM.crmSearchAdmin.functions.filter(fn => fn.category === type && fn.params.some(param => (param.must_be || []).includes('SqlField')));
             functions.push({
               text: allTypes[type],
               children: formatForSelect2(allowedFunctions, 'name', 'title', ['description'])
