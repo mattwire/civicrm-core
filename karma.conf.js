@@ -55,6 +55,7 @@ module.exports = function(config) {
       'bower_components/checklist-model/checklist-model.js',
       'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/angular-ui-sortable/sortable.js',
+      'bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js',
       'bower_components/angular-unsavedChanges/dist/unsavedChanges.js',
       'js/crm.ajax.js',
       'ang/*.js',
@@ -70,7 +71,12 @@ module.exports = function(config) {
       'ext/civi_case/ang/**/*.html',
       'ext/afform/core/ang/*.js',
       'ext/afform/core/ang/**/*.js',
-      'ext/afform/core/ang/**/*.html'
+      'ext/afform/core/ang/**/*.html',
+      'ext/search_kit/ang/*.js',
+      'ext/search_kit/ang/**/*.js',
+      'ext/search_kit/ang/**/*.html',
+      'ext/search_kit/tests/karma/lib/*.js',
+      'ext/search_kit/tests/karma/**/*.js'
     ],
     preprocessors : {
       'ang/**/*.html': ['ng-html2js'],
