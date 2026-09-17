@@ -129,6 +129,7 @@ trait CRM_Contribute_WorkflowMessage_ContributionTrait {
   /**
    * @var int
    * @scope tokenContext as contributionId, tplParams as contributionID
+   * @fkEntity Contribution
    */
   public $contributionID;
 
