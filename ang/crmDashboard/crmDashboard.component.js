@@ -1,4 +1,4 @@
-(function(angular, $, _) {
+(function(angular, $) {
 
   angular.module('crmDashboard').component('crmDashboard', {
     templateUrl: '~/crmDashboard/Dashboard.html',
@@ -126,55 +126,59 @@
         $element.find('.crm-inactive-dashlet-fieldset summary').off('click');
       };
 
-      const save = _.debounce(() => {
-        $scope.$apply(() => {
-          const toSave = [];
-          // Include both resolved inactive dashlets and pending removals in deactivation
-          const inactiveList = (this.inactive || []).concat(this.pendingRemovals || []);
-          inactiveList.forEach((dashlet) => {
-            dashlet['dashboard_contact.is_active'] = false;
-            if (dashlet['dashboard_contact.id']) {
-              toSave.push({
-                dashboard_id: dashlet.id,
-                id: dashlet['dashboard_contact.id'],
-                is_active: false
-              });
-            }
-          });
-          this.columns.forEach((dashlets, col) => {
-            dashlets.forEach((dashlet, index) => {
-              dashlet['dashboard_contact.is_active'] = true;
-              dashlet['dashboard_contact.column_no'] = col;
-              dashlet['dashboard_contact.weight'] = index;
-
-              const item = {
-                dashboard_id: dashlet.id,
-                is_active: true,
-                column_no: col,
-                weight: index
-              };
+      let saveTimer;
+      const save = () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          $scope.$apply(() => {
+            const toSave = [];
+            // Include both resolved inactive dashlets and pending removals in deactivation
+            const inactiveList = (this.inactive || []).concat(this.pendingRemovals || []);
+            inactiveList.forEach((dashlet) => {
+              dashlet['dashboard_contact.is_active'] = false;
               if (dashlet['dashboard_contact.id']) {
-                item.id = dashlet['dashboard_contact.id'];
-              }
-              toSave.push(item);
-            });
-          });
-          crmStatus({}, crmApi4('DashboardContact', 'save', {
-            records: toSave,
-            defaults: {contact_id: 'user_contact_id'}
-          }, 'dashboard_id'))
-            .then((results) => {
-              this.columns.forEach((dashlets) => {
-                dashlets.forEach((dashlet) => {
-                  dashlet['dashboard_contact.id'] = results[dashlet.id].id;
+                toSave.push({
+                  dashboard_id: dashlet.id,
+                  id: dashlet['dashboard_contact.id'],
+                  is_active: false
                 });
-              });
-              // Cache only the active dashlets
-              const activeDashlets = [].concat(...this.columns);
-              CRM.cache.set('dashboardDashlets', activeDashlets);
+              }
             });
-        });
-      }, 2000);
+            this.columns.forEach((dashlets, col) => {
+              dashlets.forEach((dashlet, index) => {
+                dashlet['dashboard_contact.is_active'] = true;
+                dashlet['dashboard_contact.column_no'] = col;
+                dashlet['dashboard_contact.weight'] = index;
+
+                const item = {
+                  dashboard_id: dashlet.id,
+                  is_active: true,
+                  column_no: col,
+                  weight: index
+                };
+                if (dashlet['dashboard_contact.id']) {
+                  item.id = dashlet['dashboard_contact.id'];
+                }
+                toSave.push(item);
+              });
+            });
+            crmStatus({}, crmApi4('DashboardContact', 'save', {
+              records: toSave,
+              defaults: {contact_id: 'user_contact_id'}
+            }, 'dashboard_id'))
+              .then((results) => {
+                this.columns.forEach((dashlets) => {
+                  dashlets.forEach((dashlet) => {
+                    dashlet['dashboard_contact.id'] = results[dashlet.id].id;
+                  });
+                });
+                // Cache only the active dashlets
+                const activeDashlets = [].concat(...this.columns);
+                CRM.cache.set('dashboardDashlets', activeDashlets);
+              });
+          });
+        }, 2000);
+      };
 
       // Sort inactive dashlets by label. This makes them easier to find if there is a large number.
       const sortInactive = () => {
@@ -250,4 +254,4 @@
     }
   });
 
-})(angular, CRM.$, CRM._);
+})(angular, CRM.$);

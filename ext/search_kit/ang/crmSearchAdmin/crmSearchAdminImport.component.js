@@ -1,4 +1,4 @@
-(function(angular, $, _) {
+(function(angular, $) {
   "use strict";
 
   angular.module('crmSearchAdmin').component('crmSearchAdminImport', {
@@ -9,92 +9,96 @@
 
       this.values = '';
 
-      const checkInput = _.debounce(function() {
-        $scope.$apply(function() {
-          if (!ctrl.values) {
-            ctrl.checking = false;
-            return;
-          }
-          try {
-            const apiCalls = JSON.parse(ctrl.values),
-              allowedEntities = ['SavedSearch', 'SearchDisplay', 'Group'];
-            if ('org.civicrm.afform' in CRM.crmSearchAdmin.modules) {
-              allowedEntities.push('Afform');
+      let checkInputTimer;
+      const checkInput = function() {
+        clearTimeout(checkInputTimer);
+        checkInputTimer = setTimeout(function() {
+          $scope.$apply(function() {
+            if (!ctrl.values) {
+              ctrl.checking = false;
+              return;
             }
-            // Get entity titles for use in status message
-            const getCalls = {
-              Entity: ['Entity', 'get', {
-                select: ['title', 'title_plural'],
-                where: [['name', 'IN', allowedEntities]]
-              }, 'name']
-            };
-            // Get count of existing matches for each import entity
-            (apiCalls || []).forEach((apiCall) => {
-              const entity = apiCall[0];
-              if (apiCall[1] !== 'save' || ('chain' in apiCall[2] && Object.keys(apiCall[2].chain).length)) {
-                throw ts('Unsupported API action: only "save" is allowed.');
+            try {
+              const apiCalls = JSON.parse(ctrl.values),
+                allowedEntities = ['SavedSearch', 'SearchDisplay', 'Group'];
+              if ('org.civicrm.afform' in CRM.crmSearchAdmin.modules) {
+                allowedEntities.push('Afform');
               }
-              if (!allowedEntities.includes(entity)) {
-                throw ts('Unsupported API entity "' + entity + '".');
-              }
-              if (entity in getCalls) {
-                throw ts('Duplicate API entity "' + entity + '".');
-              }
-              const names = apiCall[2].records.map((record) => record.name),
-                where = [['name', 'IN', names]];
-              if (entity === 'SearchDisplay') {
-                where.push(['saved_search_id.name', '=', apiCall[2].records[0]['saved_search_id.name']]);
-              }
-              if (names.length) {
-                getCalls[entity] = [entity, 'get', {select: ['row_count'], where: where}];
-              }
-            });
-            if (Object.keys(getCalls).length < 2) {
-              throw ts('No records to import.');
-            }
-            crmApi4(getCalls)
-              .then(function (results) {
-                ctrl.checking = false;
-                ctrl.error = '';
-                ctrl.preview = '';
-                allowedEntities.forEach((entity) => {
-                  if (results[entity]) {
-                    const info = results.Entity[entity],
-                      count = getCalls[entity][2].where[0][2].length,
-                      existing = results[entity].count,
-                      saveCall = apiCalls.find((call) => call[0] === entity);
-                    // Unless it's an afform, the api save params must include `match` or an update is not possible
-                    if (existing && entity !== 'Afform' && (!saveCall[2].match || !saveCall[2].match.length)) {
-                      ctrl.error += ' ' + ts('Cannot create %1 %2 because an existing one with the same name already exists.', {
-                        1: existing,
-                        2: existing === 1 ? info.title : info.title_plural
-                      });
-                      ctrl.error += ' ' + ts('To update existing records, include "match" in the API params.');
-                    } else if (existing) {
-                      ctrl.preview += ' ' + ts('%1 existing %2 will be updated.', {
-                        1: existing,
-                        2: existing === 1 ? info.title : info.title_plural
-                      });
-                    }
-                    if (existing < count) {
-                      ctrl.preview += ' ' + ts('%1 new %2 will be created.', {
-                        1: count - existing,
-                        2: (count - existing) === 1 ? info.title : info.title_plural
-                      });
-                    }
-                  }
-                });
-              }, function (error) {
-                ctrl.running = false;
-                ctrl.error = error.error_message;
-                ctrl.checking = false;
+              // Get entity titles for use in status message
+              const getCalls = {
+                Entity: ['Entity', 'get', {
+                  select: ['title', 'title_plural'],
+                  where: [['name', 'IN', allowedEntities]]
+                }, 'name']
+              };
+              // Get count of existing matches for each import entity
+              (apiCalls || []).forEach((apiCall) => {
+                const entity = apiCall[0];
+                if (apiCall[1] !== 'save' || ('chain' in apiCall[2] && Object.keys(apiCall[2].chain).length)) {
+                  throw ts('Unsupported API action: only "save" is allowed.');
+                }
+                if (!allowedEntities.includes(entity)) {
+                  throw ts('Unsupported API entity "' + entity + '".');
+                }
+                if (entity in getCalls) {
+                  throw ts('Duplicate API entity "' + entity + '".');
+                }
+                const names = apiCall[2].records.map((record) => record.name),
+                  where = [['name', 'IN', names]];
+                if (entity === 'SearchDisplay') {
+                  where.push(['saved_search_id.name', '=', apiCall[2].records[0]['saved_search_id.name']]);
+                }
+                if (names.length) {
+                  getCalls[entity] = [entity, 'get', {select: ['row_count'], where: where}];
+                }
               });
-          } catch (e) {
-            ctrl.error = e;
-            ctrl.checking = false;
-          }
-        });
-      }, 500);
+              if (Object.keys(getCalls).length < 2) {
+                throw ts('No records to import.');
+              }
+              crmApi4(getCalls)
+                .then(function (results) {
+                  ctrl.checking = false;
+                  ctrl.error = '';
+                  ctrl.preview = '';
+                  allowedEntities.forEach((entity) => {
+                    if (results[entity]) {
+                      const info = results.Entity[entity],
+                        count = getCalls[entity][2].where[0][2].length,
+                        existing = results[entity].count,
+                        saveCall = apiCalls.find((call) => call[0] === entity);
+                      // Unless it's an afform, the api save params must include `match` or an update is not possible
+                      if (existing && entity !== 'Afform' && (!saveCall[2].match || !saveCall[2].match.length)) {
+                        ctrl.error += ' ' + ts('Cannot create %1 %2 because an existing one with the same name already exists.', {
+                          1: existing,
+                          2: existing === 1 ? info.title : info.title_plural
+                        });
+                        ctrl.error += ' ' + ts('To update existing records, include "match" in the API params.');
+                      } else if (existing) {
+                        ctrl.preview += ' ' + ts('%1 existing %2 will be updated.', {
+                          1: existing,
+                          2: existing === 1 ? info.title : info.title_plural
+                        });
+                      }
+                      if (existing < count) {
+                        ctrl.preview += ' ' + ts('%1 new %2 will be created.', {
+                          1: count - existing,
+                          2: (count - existing) === 1 ? info.title : info.title_plural
+                        });
+                      }
+                    }
+                  });
+                }, function (error) {
+                  ctrl.running = false;
+                  ctrl.error = error.error_message;
+                  ctrl.checking = false;
+                });
+            } catch (e) {
+              ctrl.error = e;
+              ctrl.checking = false;
+            }
+          });
+        }, 500);
+      };
 
       this.onChangeInput = function() {
         ctrl.checking = true;
@@ -125,4 +129,4 @@
     }
   });
 
-})(angular, CRM.$, CRM._);
+})(angular, CRM.$);

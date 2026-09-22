@@ -1,4 +1,4 @@
-(function(angular, $, _) {
+(function(angular, $) {
 
   // Controller for the edit-recipients fields (
   // WISHLIST: Move most of this to a (cache-enabled) service
@@ -64,17 +64,21 @@
 
     // We monitor four fields -- use debounce so that changes across the
     // four fields can settle-down before AJAX.
-    var refreshRecipients = _.debounce(function() {
-      $scope.$apply(function() {
-        if (!$scope.mailing) {
-          return;
-        }
-        crmMailingMgr.previewRecipientCount($scope.mailing, crmMailingCache, !$scope.permitRecipientRebuild).then(function(recipients) {
-          $scope.outdated = ($scope.permitRecipientRebuild && !angular.equals(recipientParams(), builtParams()));
-          $scope.recipients = recipients;
+    var refreshTimer;
+    var refreshRecipients = function() {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(function() {
+        $scope.$apply(function() {
+          if (!$scope.mailing) {
+            return;
+          }
+          crmMailingMgr.previewRecipientCount($scope.mailing, crmMailingCache, !$scope.permitRecipientRebuild).then(function(recipients) {
+            $scope.outdated = ($scope.permitRecipientRebuild && !angular.equals(recipientParams(), builtParams()));
+            $scope.recipients = recipients;
+          });
         });
-      });
-    }, RECIPIENTS_DEBOUNCE_MS);
+      }, RECIPIENTS_DEBOUNCE_MS);
+    };
     $scope.$watchCollection("mailing.dedupe_email", refreshRecipients);
     $scope.$watchCollection("mailing.location_type_id", refreshRecipients);
     $scope.$watchCollection("mailing.email_selection_method", refreshRecipients);
@@ -138,4 +142,4 @@
     };
   });
 
-})(angular, CRM.$, CRM._);
+})(angular, CRM.$);

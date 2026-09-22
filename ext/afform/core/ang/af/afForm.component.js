@@ -1,4 +1,4 @@
-(function(angular, $, _) {
+(function(angular, $) {
   "use strict";
   // Example usage: <af-form ctrl="afform">
   angular.module('af').component('afForm', {
@@ -217,7 +217,11 @@
 
         // If autosave enabled, save every ten seconds if changes have been made
         if (autoSaveEnabled) {
-          autoSave = _.debounce(ctrl.submitDraft, 10000);
+          let autoSaveTimer;
+          autoSave = (...autoSaveArgs) => {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => ctrl.submitDraft(...autoSaveArgs), 10000);
+          };
         }
 
         cancelDraftWatcher = $scope.$watch(() => data, function (newVal, oldVal) {
@@ -637,4 +641,4 @@
       };
     }
   });
-})(angular, CRM.$, CRM._);
+})(angular, CRM.$);

@@ -1,5 +1,5 @@
 /* global require, monaco */
-(function(angular, $, _) {
+(function(angular, $) {
   angular.module('crmMonaco', CRM.angRequires('crmMonaco'));
 
   // "crmMonaco" is a basic skeletal directive.
@@ -65,11 +65,15 @@
             editor.setModel({ original: originalModel, modified: modifiedModel });
 
             // Important -- how to propagate changes back to angular
-            editor.getModifiedEditor().onDidChangeModelContent(_.debounce(function () {
-              $scope.$apply(function () {
-                ngModel.$setViewValue(modifiedModel.getValue());
-              });
-            }, 150));
+            let modifiedTimer;
+            editor.getModifiedEditor().onDidChangeModelContent(function () {
+              clearTimeout(modifiedTimer);
+              modifiedTimer = setTimeout(function () {
+                $scope.$apply(function () {
+                  ngModel.$setViewValue(modifiedModel.getValue());
+                });
+              }, 150);
+            });
 
             ngModel.$render = function () {
               //   console.log('update modifiedModemodifiedEditorl content ' + new Date());
@@ -83,11 +87,15 @@
           else {
             editor = monaco.editor.create(editorEl[0], options);
 
-            editor.onDidChangeModelContent(_.debounce(function () {
-              $scope.$apply(function () {
-                ngModel.$setViewValue(editor.getValue());
-              });
-            }, 150));
+            let changeTimer;
+            editor.onDidChangeModelContent(function () {
+              clearTimeout(changeTimer);
+              changeTimer = setTimeout(function () {
+                $scope.$apply(function () {
+                  ngModel.$setViewValue(editor.getValue());
+                });
+              }, 150);
+            });
 
             ngModel.$render = function() {
               if (editor) {
@@ -128,4 +136,4 @@
     };
   });
 
-})(angular, CRM.$, CRM._);
+})(angular, CRM.$);
