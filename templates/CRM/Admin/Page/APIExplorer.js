@@ -649,8 +649,7 @@
         .addClass('crm-error')
         .css('width', '82%')
         .attr('title', msg)
-        .before('<i class="crm-i fa-exclamation-triangle crm-i-red" title="'+msg+'" role="img" aria-hidden="true"></i> ')
-        .tooltip();
+        .before('<i class="crm-i fa-exclamation-triangle crm-i-red" title="'+msg+'" role="img" aria-hidden="true"></i> ');
     }
   }
 
@@ -663,7 +662,6 @@
       .removeClass('crm-error')
       .attr('title', '')
       .css('width', '85%')
-      .tooltip('destroy')
       .siblings('.fa-exclamation-triangle').remove();
   }
 
