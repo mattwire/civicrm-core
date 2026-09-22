@@ -307,6 +307,42 @@ if (!CRM.vars) CRM.vars = {};
   };
 
   /**
+   * Compares two values structurally: primitives by value, arrays and plain objects by
+   * their contents, all the way down. Useful where `===` would compare references, e.g.
+   * a multi-select's value, which jQuery hands back as an array.
+   * @param {*} a
+   * @param {*} b
+   * @return {bool}
+   */
+  CRM.utils.isEqual = function(a, b) {
+    if (a === b) {
+      // 0 === -0, but they are not interchangeable
+      return a !== 0 || 1 / a === 1 / b;
+    }
+    // NaN is the one value that isn't === itself
+    if (typeof a === 'number' && typeof b === 'number') {
+      return isNaN(a) && isNaN(b);
+    }
+    if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') {
+      return false;
+    }
+    if (a instanceof Date || b instanceof Date) {
+      return a instanceof Date && b instanceof Date && a.getTime() === b.getTime();
+    }
+    if (a instanceof RegExp || b instanceof RegExp) {
+      return a instanceof RegExp && b instanceof RegExp && String(a) === String(b);
+    }
+    if (Array.isArray(a) !== Array.isArray(b)) {
+      return false;
+    }
+    const keys = Object.keys(a);
+    if (keys.length !== Object.keys(b).length) {
+      return false;
+    }
+    return keys.every((key) => Object.prototype.hasOwnProperty.call(b, key) && CRM.utils.isEqual(a[key], b[key]));
+  };
+
+  /**
    * Deep-clones a value that structuredClone() can't handle - typically because it contains
    * functions, which structuredClone() throws on. Anything it doesn't recognise (functions,
    * DOM nodes, class instances) is passed through by reference rather than cloned.
@@ -408,7 +444,7 @@ if (!CRM.vars) CRM.vars = {};
         initialValue = $(this).data('crm-initial-value'),
         currentValue = $(this).is(':checkbox, :radio') ? $(this).prop('checked') : $(this).val();
       // skip change of value for submit buttons
-      if (initialValue !== undefined && !_.isEqual(initialValue, currentValue)) {
+      if (initialValue !== undefined && !CRM.utils.isEqual(initialValue, currentValue)) {
         isDirty = true;
       }
     });
@@ -1459,7 +1495,7 @@ if (!CRM.vars) CRM.vars = {};
     var ajax = typeof params !== 'string';
     if (helpDisplay && helpDisplay.close) {
       // If the same link is clicked twice, just close the display
-      if (helpDisplay.isOpen && _.isEqual(helpPrevious, params)) {
+      if (helpDisplay.isOpen && CRM.utils.isEqual(helpPrevious, params)) {
         helpDisplay.close();
         return;
       }
