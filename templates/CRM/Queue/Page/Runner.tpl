@@ -208,7 +208,6 @@ CRM.$(function($) {
   } else {
     $("#crm-queue-runner-skip").remove();
   }
-  $("#crm-queue-runner-buttonset").buttonset();
   $("#crm-queue-runner-buttonset").hide();
   $("#crm-queue-runner-crash-text").hide();
   window.setTimeout(runNext, 50);
