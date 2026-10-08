@@ -281,8 +281,21 @@ class CRM_Event_Form_ManageEvent_Registration extends CRM_Event_Form_ManageEvent
     self::buildConfirmationBlock($this);
     self::buildMailBlock($this);
     self::buildThankYouBlock($this);
+    CRM_Mailing_BAO_Mailing::commonCompose($this);
 
     parent::buildQuickForm();
+  }
+
+  /**
+   * List available tokens for this form.
+   *
+   * These fields are rendered by the `event_online_receipt` workflow (see CRM_Event_BAO_Event::sendMail()), so offer its tokens.
+   *
+   * @return array
+   */
+  public function listTokens(): array {
+    $schema = CRM_Core_BAO_MessageTemplate::getWorkflowTokenSchema('event_online_receipt');
+    return (new Civi\Token\TokenProcessor(Civi::dispatcher(), ['schema' => $schema ?: ['eventId', 'contactId']]))->listTokens();
   }
 
   /**

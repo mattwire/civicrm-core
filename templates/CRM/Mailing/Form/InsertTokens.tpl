@@ -44,6 +44,10 @@ var isMailing    = false;
       }
     {/literal}
   {/if}
+{elseif $form.formClass eq 'CRM_Event_Form_ManageEvent_Registration'}
+  {literal}
+  isMailing = false;
+  {/literal}
 {else}
   {literal}
   text_message = "text_message";

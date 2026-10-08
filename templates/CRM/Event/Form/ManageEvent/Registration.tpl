@@ -102,11 +102,11 @@
     <table class="form-layout-compressed">
       <tr class="crm-event-manage-registration-form-block-intro_text">
         <td class="label">{$form.intro_text.label} {if $action == 2}{include file='CRM/Core/I18n/Dialog.tpl' table='civicrm_event' field='intro_text' id=$eventID}{/if}</td>
-        <td>{$form.intro_text.html}</td>
+        <td>{$form.intro_text.html}<br/><input class="crm-token-selector" data-field="intro_text" /></td>
       </tr>
       <tr class="crm-event-manage-registration-form-block-footer_text">
         <td class="label">{$form.footer_text.label} {if $action == 2}{include file='CRM/Core/I18n/Dialog.tpl' table='civicrm_event' field='footer_text' id=$eventID}{/if}</td>
-        <td>{$form.footer_text.html}</td>
+        <td>{$form.footer_text.html}<br/><input class="crm-token-selector" data-field="footer_text" /></td>
       </tr>
     </table>
     <table class="form-layout-compressed">
@@ -226,11 +226,11 @@
       </tr>
       <tr class="crm-event-manage-registration-form-block-confirm_thankyou_text">
         <td class="label">{$form.thankyou_text.label} {if $action == 2}{include file='CRM/Core/I18n/Dialog.tpl' table='civicrm_event' field='thankyou_text' id=$eventID}{/if}</td>
-        <td>{$form.thankyou_text.html}</td>
+        <td>{$form.thankyou_text.html}<br/><input class="crm-token-selector" data-field="thankyou_text" /></td>
       </tr>
       <tr class="crm-event-manage-registration-form-block-confirm_thankyou_footer_text">
         <td class="label">{$form.thankyou_footer_text.label} {if $action == 2}{include file='CRM/Core/I18n/Dialog.tpl' table='civicrm_event' field='thankyou_footer_text' id=$eventID}{/if}</td>
-        <td>{$form.thankyou_footer_text.html}</td>
+        <td>{$form.thankyou_footer_text.html}<br/><input class="crm-token-selector" data-field="thankyou_footer_text" /></td>
       </tr>
     </table>
   </div
@@ -251,6 +251,7 @@
         <tr class="crm-event-manage-registration-form-block-confirm_email_text">
           <td class="label">{$form.confirm_email_text.label} {if $action == 2}{include file='CRM/Core/I18n/Dialog.tpl' table='civicrm_event' field='confirm_email_text' id=$eventID}{/if}</td>
           <td>{$form.confirm_email_text.html}<br/>
+            <input class="crm-token-selector" data-field="confirm_email_text" /><br/>
             <span class="description">{ts}Additional message or instructions to include in confirmation email.{/ts}</span>
           </td>
         </tr>
@@ -319,6 +320,8 @@
 
 {*include profile link function*}
 {include file="CRM/common/buildProfileLink.tpl"}
+
+{include file="CRM/Mailing/Form/InsertTokens.tpl"}
 
 <script type="text/javascript">
 {literal}
