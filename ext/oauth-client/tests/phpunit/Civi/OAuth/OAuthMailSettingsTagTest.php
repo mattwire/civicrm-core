@@ -180,6 +180,24 @@ class OAuthMailSettingsTagTest extends \PHPUnit\Framework\TestCase implements
     $this->assertStringContainsString('re-connect', $connected['status_message']);
   }
 
+  public function testRejectedClientAsksForANewSecret(): void {
+    $client = $this->createClient();
+    $mailSettings = $this->createMailSettings();
+    $token = $this->createToken($client, $mailSettings['id'], \CRM_Utils_Time::time() - 60);
+    OAuthSysToken::update(FALSE)
+      ->addWhere('id', '=', $token['id'])
+      ->addValue('error', ['error' => 'invalid_client', 'error_description' => 'The client secret has expired.', 'time' => \CRM_Utils_Time::time()])
+      ->execute();
+
+    $connected = $this->getInitiators($mailSettings['id'])->getConnected();
+
+    $this->assertSame('danger', $connected['status_severity']);
+    $this->assertStringContainsString('The client secret has expired.', $connected['status_message']);
+    $this->assertStringContainsString('client secret is updated', $connected['status_message']);
+    $this->assertStringNotContainsString('re-connect', $connected['status_message'],
+      'Signing in again does not fix a rejected client');
+  }
+
   public function testExpiredTokenReportsWarning(): void {
     $client = $this->createClient();
     $mailSettings = $this->createMailSettings();
