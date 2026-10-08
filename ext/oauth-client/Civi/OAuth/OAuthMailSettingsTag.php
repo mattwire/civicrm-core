@@ -110,14 +110,18 @@ class OAuthMailSettingsTag extends AutoService implements EventSubscriberInterfa
 
     // Set by OAuthSysToken::refresh() when the provider rejects the token, cleared when a refresh succeeds.
     if (!empty($token['error']['error'])) {
-      return [
-        'status_severity' => 'danger',
-        'status_message' => E::ts('%1 rejected this connection on %2: %3. Mail will not be collected until you re-connect.', [
-          1 => $service,
-          2 => \CRM_Utils_Date::customFormat(date('Y-m-d H:i:s', $token['error']['time'] ?? \CRM_Utils_Time::time())),
-          3 => $token['error']['error_description'] ?? $token['error']['error'],
-        ]),
+      $params = [
+        1 => $service,
+        2 => \CRM_Utils_Date::customFormat(date('Y-m-d H:i:s', $token['error']['time'] ?? \CRM_Utils_Time::time())),
+        3 => rtrim($token['error']['error_description'] ?? $token['error']['error'], '. '),
+        4 => $client['id'],
       ];
+      // invalid_client means the client's own credentials were refused (e.g. an expired secret), so
+      // signing in again cannot help.
+      $message = $token['error']['error'] === 'invalid_client'
+        ? E::ts('%1 rejected the credentials of OAuth client #%4 on %2: %3. Mail will not be collected until the client secret is updated.', $params)
+        : E::ts('%1 rejected this connection on %2: %3. Mail will not be collected until you re-connect.', $params);
+      return ['status_severity' => 'danger', 'status_message' => $message];
     }
 
     // An expired access token is routine: the next poll uses the refresh token to get a new one.
