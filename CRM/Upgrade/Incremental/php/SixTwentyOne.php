@@ -64,6 +64,7 @@ class CRM_Upgrade_Incremental_php_SixTwentyOne extends CRM_Upgrade_Incremental_B
    */
   public function upgrade_6_21_alpha1($rev): void {
     $this->addTask(ts('Upgrade DB to %1: SQL', [1 => $rev]), 'runSql', $rev);
+    $this->addSimpleExtensionTask('Enable Scheduled Communications extension', ['scheduled_communications']);
     $this->addTask('Add column "MessageTemplate.usage"', 'alterSchemaField', 'MessageTemplate', 'usage', [
       'title' => ts('Usage'),
       'sql_type' => 'varchar(512)',
