@@ -264,6 +264,9 @@
         return op === 'NOT' ? !ret : ret;
       };
 
+      // PHP's (bool) cast: unlike JS, '0' and [] are false.
+      const isPhpTruthy = (val) => !(val === undefined || val === null || val === false || val === 0 || val === '' || val === '0' || (Array.isArray(val) && !val.length));
+
       function compareConditions(val1, op, val2) {
         const yes = (op !== '!=' && !op.includes('NOT '));
 
@@ -272,6 +275,10 @@
           case '!=':
           // Legacy operator, changed to '=', but may still exist on older forms.
           case '==':
+            // Like PHP, compare against a boolean as booleans, so an untouched checkbox equals false as it does on the server
+            if (typeof val1 === 'boolean' || typeof val2 === 'boolean') {
+              return (isPhpTruthy(val1) === isPhpTruthy(val2)) === yes;
+            }
             // Case-insensitive string comparisons
             if (typeof val1 === 'string') {
               val1 = val1.toLowerCase();
